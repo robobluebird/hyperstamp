@@ -53,18 +53,6 @@ module Ruby2D
       @show_border = false
     end
 
-    def arrange_text!
-      @text.x = self.x + (self.width / 2) - @text.width / 2
-      @text.y = self.y + (self.height / 2) - @text.height / 2
-    end
-
-    def resize!
-      @border.width = self.width + 2
-      @border.height = self.height + 2
-      @shadow.width = self.width
-      @shadow.height = self.height
-    end
-
     def z= new_z
       @border.z = new_z
       @shadow.z = new_z
@@ -115,6 +103,20 @@ module Ruby2D
       @border.color = 'black'
       @shadow.color = 'black'
       hide_border unless @show_border
+    end
+
+    private
+
+    def arrange_text!
+      @text.x = self.x + (self.width / 2) - @text.width / 2
+      @text.y = self.y + (self.height / 2) - @text.height / 2
+    end
+
+    def resize!
+      @border.width = self.width + 2
+      @border.height = self.height + 2
+      @shadow.width = self.width
+      @shadow.height = self.height
     end
   end
 end

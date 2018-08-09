@@ -3,6 +3,7 @@ require 'mini_magick'
 require_relative 'graphic'
 require_relative 'button'
 require_relative 'mode'
+require_relative 'text_box'
 
 @z = -1
 @item = nil
@@ -196,6 +197,15 @@ end
   y: 40,
   width: 50,
   height: 50
+)
+
+@objects << TextBox.new(
+  z: z,
+  x: 300,
+  y: 300,
+  width: 50,
+  height: 50,
+  text: 'something wicked this way comes!'
 )
 
 show
