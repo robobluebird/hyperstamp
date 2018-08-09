@@ -153,66 +153,38 @@ on :key_up do |e|
       gtoggle = 0
     end
   elsif e.key.to_sym == :e
-    @mode.edit? ? @mode.interact : @mode.edit
-  elsif e.key.to_sym == :r
-    reset
-  elsif e.key.to_sym == :h
-    if @controls.size > 0
-      @controls.each do |c|
-        c.remove
-      end
-      @controls.clear
+    if @mode.edit?
+      @mode.interact
+      remove_controls
     else
+      @mode.edit
       add_controls
     end
+  elsif e.key.to_sym == :r
+    reset
+    @mode.edit
+    add_controls
   end
 end
 
+def remove_controls
+  @controls.each do |c|
+    c.remove
+  end
+
+  @controls.clear
+end
+
 def add_controls
-  @controls << Button.new(
-    label: 'new button',
-    z: 1000,
-    x: get(:width) - 110,
-    y: 10,
-    width: 100,
-    height: 50
-  )
+  x = get(:width) - 110
 
-  @controls << Button.new(
-    label: 'new text',
-    z: 1000,
-    x: get(:width) - 110,
-    y: 70,
-    width: 100,
-    height: 50
-  )
-
-  @controls << Button.new(
-    label: 'new graphic',
-    z: 1000,
-    x: get(:width) - 110,
-    y: 130,
-    width: 100,
-    height: 50
-  )
-
-  @controls << Button.new(
-    label: 'closer',
-    z: 1000,
-    x: get(:width) - 110,
-    y: 190,
-    width: 100,
-    height: 50
-  )
-
-  @controls << Button.new(
-    label: 'farther',
-    z: 1000,
-    x: get(:width) - 110,
-    y: 250,
-    width: 100,
-    height: 50
-  )
+  @controls = [
+    Button.new(label: 'new button', z: 1000, x: x, y: 10, width: 100, height: 50),
+    Button.new(label: 'new text', z: 1000, x: x, y: 70, width: 100, height: 50),
+    Button.new(label: 'new graphic', z: 1000, x: x, y: 130, width: 100, height: 50),
+    Button.new(label: 'closer', z: 1000, x: x, y: 190, width: 100, height: 50),
+    Button.new(label: 'farther', z: 1000, x: x, y: 250, width: 100, height: 50)
+  ]
 end
 
 @objects << load_image('skel.jpg')

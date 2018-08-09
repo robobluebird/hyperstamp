@@ -5,34 +5,36 @@ module Ruby2D
     attr_accessor :tag, :label, :show_border
 
     def initialize opts = {}
-      @show_border = 1
+      @show_border = true
       @tag = opts[:tag]
       @label = opts[:label] || 'button'
 
       opts[:color] = 'white'
 
-      @border = Rectangle.new(z: opts[:z],
-                              x: opts[:x] - 1,
-                              y: opts[:y] - 1,
-                              width: opts[:width] + 2,
-                              height: opts[:height] + 2,
-                              color: 'black')
+      @border = Rectangle.new(
+        z: opts[:z],
+        x: opts[:x] - 1,
+        y: opts[:y] - 1,
+        width: opts[:width] + 2,
+        height: opts[:height] + 2,
+        color: 'black')
 
-      @shadow = Rectangle.new(z: opts[:z],
-                              x: opts[:x] + 2,
-                              y: opts[:y] + 2,
-                              width: opts[:width],
-                              height: opts[:height],
-                              color: 'black')
-
+      @shadow = Rectangle.new(
+        z: opts[:z],
+        x: opts[:x] + 2,
+        y: opts[:y] + 2,
+        width: opts[:width],
+        height: opts[:height],
+        color: 'black')
 
       super opts
 
-      @text = Text.new(z: opts[:z],
-                       text: @label,
-                       font: 'luximb.ttf',
-                       size: 12,
-                       color: 'black')
+      @text = Text.new(
+        z: opts[:z],
+        text: @label,
+        font: 'luximb.ttf',
+        size: 12,
+        color: 'black')
 
       arrange_text!
     end
@@ -41,14 +43,14 @@ module Ruby2D
       @border.opacity = 1
       @shadow.opacity = 1
       self.opacity = 1
-      @show_border = 1
+      @show_border = true
     end
 
     def hide_border
       @border.opacity = 0
       @shadow.opacity = 0
       self.opacity = 0
-      @show_border = 0
+      @show_border = false
     end
 
     def arrange_text!
@@ -112,7 +114,7 @@ module Ruby2D
       @text.color = 'black'
       @border.color = 'black'
       @shadow.color = 'black'
-      hide_border if @show_border.zero?
+      hide_border unless @show_border
     end
   end
 end
