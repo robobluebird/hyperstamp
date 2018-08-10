@@ -2,7 +2,7 @@ require 'ruby2d'
 
 module Ruby2D
   class Button < Rectangle
-    attr_accessor :tag, :label, :show_border
+    attr_accessor :tag, :label
 
     def initialize opts = {}
       @show_border = true
@@ -37,6 +37,10 @@ module Ruby2D
         color: 'black')
 
       arrange_text!
+    end
+
+    def border?
+      @show_border
     end
 
     def show_border

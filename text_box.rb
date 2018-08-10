@@ -2,12 +2,17 @@ require 'ruby2d'
 
 module Ruby2D
   class TextBox < Rectangle
-    attr_reader :words
+    attr_reader :words, :text_color, :color_scheme, :style
+    attr_accessor :tag
 
     def initialize opts = {}
-      @lines = []
       @show_border = true
+      @tag = opts[:tag]
+      @lines = []
       @words = opts[:text]
+      @text_color = :black
+      @color_scheme = :black_on_white
+      @style = :default
 
       @border = Rectangle.new(
         z: opts[:z],
@@ -21,6 +26,60 @@ module Ruby2D
 
       arrange_text!
     end
+
+    def style= style
+      case style
+      when :default
+        @border.opacity = 1
+        self.opacity = 1
+      when :text_only
+        @border.opacity = 0
+        self.opacity = 0
+      else
+        raise
+      end
+
+      @style = style
+    end
+
+    def color_scheme= scheme
+      raise unless [:black_on_white, :white_on_black].include? scheme
+
+      case scheme
+      when :black_on_white
+        @border.color = 'black'
+        self.color = 'white'
+        @text_color = 'black'
+      when :white_on_black
+        @border.color = 'white'
+        self.color = 'black'
+        @text_color = 'white'
+      end
+
+      @color_scheme = scheme
+      arrange_text!
+      self.style = @style
+    end
+
+    def text_color= color
+      raise unless [:black, :white].include? color
+
+      @text_color = color
+
+      arrange_text!
+    end
+
+    # def invert
+    #   self.color = 'black'
+    #   @border.color = 'white'
+    #   @lines.each { |line| line.color = 'white' }
+    # end
+    #
+    # def revert
+    #   self.color = 'white'
+    #   @border.color = 'black'
+    #   arrange_text!
+    # end
 
     def resize dx, dy
       self.width = @width + dx
@@ -75,11 +134,11 @@ module Ruby2D
         range = start_index...end_index
 
         @lines << Text.new(
+          color: @text_color.to_s,
           z: self.z,
           text: @words[range],
           font: 'luximb.ttf',
           size: 12,
-          color: 'black',
           x: self.x,
           y: self.y + line_num * 16)
       end

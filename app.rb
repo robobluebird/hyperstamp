@@ -135,7 +135,6 @@ on :mouse_move do |e|
 end
 
 toggle = 0
-gtoggle = 0
 on :key_up do |e|
   if e.key.to_sym == :f
     if toggle.zero?
@@ -146,12 +145,10 @@ on :key_up do |e|
       toggle = 0
     end
   elsif e.key.to_sym == :g
-    if gtoggle.zero?
+    if @objects.first.border?
       @objects.first.hide_border
-      gtoggle = 1
     else
       @objects.first.show_border
-      gtoggle = 0
     end
   elsif e.key.to_sym == :e
     if @mode.edit?
@@ -165,6 +162,12 @@ on :key_up do |e|
     reset
     @mode.edit
     add_controls
+  elsif e.key.to_sym == :s
+    @box.style = @box.style == :default ? :text_only : :default
+  elsif e.key.to_sym == :x
+    @box.color_scheme = @box.color_scheme == :black_on_white ? :white_on_black : :black_on_white
+  elsif e.key.to_sym == :h
+    @box.text_color = @box.text_color == :black ? :white : :black
   end
 end
 
@@ -199,13 +202,15 @@ end
   height: 50
 )
 
-@objects << TextBox.new(
+@box = TextBox.new(
   z: z,
   x: 300,
   y: 300,
   width: 50,
   height: 50,
-  text: 'something wicked this way comes!'
+  text: 'Something F*cked This Way Comes!'
 )
+
+@objects << @box
 
 show
