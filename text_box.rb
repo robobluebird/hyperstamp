@@ -1,4 +1,5 @@
 require 'ruby2d'
+require_relative 'keys'
 
 module Ruby2D
   class TextBox < Rectangle
@@ -14,6 +15,26 @@ module Ruby2D
       @color_scheme = :black_on_white
       @style = :default
 
+      @cursor = Line.new(
+        z: opts[:z],
+        x1: 0,
+        y1: 0,
+        x2: 0,
+        y2: 16,
+        color: 'black')
+
+      @cursor.opacity = 0
+
+      @focus = Rectangle.new(
+        z: opts[:z],
+        x: opts[:x] - 5,
+        y: opts[:y] - 5,
+        width: opts[:width] + 10,
+        height: opts[:height] + 10,
+        color: 'gray')
+
+      @focus.opacity = 0
+
       @border = Rectangle.new(
         z: opts[:z],
         x: opts[:x] - 1,
@@ -25,6 +46,10 @@ module Ruby2D
       super opts
 
       arrange_text!
+    end
+
+    def editable?
+      true
     end
 
     def style= style
@@ -40,6 +65,22 @@ module Ruby2D
       end
 
       @style = style
+    end
+
+    def append str
+      if str.include? 'backspace'
+        @words.slice! -1
+      elsif str.include? 'return'
+        @words += "\n"
+      elsif str.include? 'space'
+        @words += ' '
+      else
+        elements = str.to_s.split('_')
+        p elements
+        @words += Keys.get(elements.last, elements.count == 2)
+      end
+
+      arrange_text!
     end
 
     def color_scheme= scheme
@@ -96,7 +137,20 @@ module Ruby2D
       @border.x = @border.x + dx
       @border.y = @border.y + dy
 
+      @focus.x = @focus.x + dx
+      @focus.y = @focus.y + dy
+
       arrange_text!
+    end
+
+    def focus
+      @cursor.opacity = 1
+      @focus.opacity = 1
+    end
+
+    def defocus
+      @cursor.opacity = 0
+      @focus.opacity = 0
     end
 
     private
@@ -104,6 +158,8 @@ module Ruby2D
     def resize!
       @border.width = self.width + 2
       @border.height = self.height + 2
+      @focus.width = self.width + 10
+      @focus.height = self.height + 10
     end
 
     def clear_text!
@@ -142,6 +198,12 @@ module Ruby2D
           x: self.x,
           y: self.y + line_num * 16)
       end
+
+      @cursor.z = self.z
+      @cursor.x1 = self.x + (@lines.last ? @lines.last.text.length : 0) * 7
+      @cursor.x2 = @cursor.x1
+      @cursor.y1 = self.y + (num_lines.zero? ? 0 : num_lines - 1) * 16
+      @cursor.y2 = self.y + (num_lines.zero? ? 1 : num_lines) * 16
     end
   end
 end

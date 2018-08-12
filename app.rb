@@ -112,6 +112,11 @@ on :mouse_down do |e|
 end
 
 on :mouse_up do |e|
+  @focused.defocus if @focused
+  @focused = nil
+
+  next unless @item
+
   @item.revert if @item && @item.respond_to?(:revert)
 
   if @mtype
@@ -120,6 +125,11 @@ on :mouse_up do |e|
     # do something with click
     # for button it'd be the click action
     # for text box it'd be focus
+  end
+
+  if @mode.edit?
+    @item.focus
+    @focused = @item
   end
 
   @item = nil
@@ -134,23 +144,41 @@ on :mouse_move do |e|
   end
 end
 
-toggle = 0
+on :key_down do |e|
+  if e.key.include? 'shift'
+    @shift = true
+  elsif e.key.include? 'command'
+    @command = true
+  end
+end
+
 on :key_up do |e|
-  if e.key.to_sym == :f
-    if toggle.zero?
-      closer @objects.first
-      toggle = 1
-    else
-      farther @objects.first
-      toggle = 0
-    end
-  elsif e.key.to_sym == :g
+  key = e.key
+
+  if key.include? 'shift'
+    @shift = false
+    next
+  elsif key.include? 'command'
+    @command = false
+    next
+  end
+
+  key = "shift_#{key}" if @shift
+  key = "command_#{key}" if @command
+  key = key.to_sym
+
+  if @focused && @focused.editable?
+    @focused.append key.to_s
+    next
+  end
+
+  if key == :g
     if @objects.first.border?
       @objects.first.hide_border
     else
       @objects.first.show_border
     end
-  elsif e.key.to_sym == :e
+  elsif key == :e
     if @mode.edit?
       @mode.interact
       remove_controls
@@ -158,15 +186,15 @@ on :key_up do |e|
       @mode.edit
       add_controls
     end
-  elsif e.key.to_sym == :r
+  elsif key == :r
     reset
     @mode.edit
     add_controls
-  elsif e.key.to_sym == :s
+  elsif key == :s
     @box.style = @box.style == :default ? :text_only : :default
-  elsif e.key.to_sym == :x
+  elsif key == :x
     @box.color_scheme = @box.color_scheme == :black_on_white ? :white_on_black : :black_on_white
-  elsif e.key.to_sym == :h
+  elsif key == :h
     @box.text_color = @box.text_color == :black ? :white : :black
   end
 end
