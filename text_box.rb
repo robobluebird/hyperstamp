@@ -76,7 +76,6 @@ module Ruby2D
         @words += ' '
       else
         elements = str.to_s.split('_')
-        p elements
         @words += Keys.get(elements.last, elements.count == 2)
       end
 
@@ -178,14 +177,16 @@ module Ruby2D
       chars_across = (self.width / 7).floor
 
       num_lines = [
-        (@words.length.to_f / chars_across).ceil,
+        (@words.length.to_f / chars_across).ceil + @words.count("\n"),
         (self.height.to_f / 16).floor
       ].min
 
-      num_lines.times do |line_num|
-        start_index = line_num * chars_across
+      start_index = 0
 
-        end_index = [line_num * chars_across + chars_across, @words.length].min
+      num_lines.times do |line_num|
+        next_linebreak = @words.index("\n", start_index) || @words.length + 1
+
+        end_index = [line_num * chars_across + chars_across, next_linebreak, @words.length].min
 
         range = start_index...end_index
 
@@ -196,7 +197,10 @@ module Ruby2D
           font: 'luximb.ttf',
           size: 12,
           x: self.x,
-          y: self.y + line_num * 16)
+          y: self.y + line_num * 16
+        )
+
+        start_index = end_index == next_linebreak ? end_index + 1 : end_index
       end
 
       @cursor.z = self.z
