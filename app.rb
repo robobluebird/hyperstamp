@@ -53,14 +53,18 @@ def load_image filename
 
   m.write path
 
-  MyImage.new path: path, context: self, z: z
+  Graphic.new path: path, context: self, z: z
 end
 
 def closer item
-  i = zord.index(item)
-  n = zord[i - 1]
+  return if item.nil?
 
-  return if n.nil?
+  i = zord.index(item)
+  closer_index = i - 1
+
+  return if closer_index < 0
+
+  n = zord[closer_index]
 
   z1, z2 = item.z, n.z
   item.z = z2
@@ -68,6 +72,8 @@ def closer item
 end
 
 def farther item
+  return if item.nil?
+
   i = zord.index(item)
   n = zord[i + 1]
 
@@ -112,8 +118,10 @@ on :mouse_down do |e|
 end
 
 on :mouse_up do |e|
-  @focused.defocus if @focused
-  @focused = nil
+  if @mode.edit? && !@controls.include?(@item)
+    @focused.defocus if @focused
+    @focused = nil
+  end
 
   next unless @item
 
@@ -122,12 +130,12 @@ on :mouse_up do |e|
   if @mtype
     @mtype = nil
   else
-    # do something with click
-    # for button it'd be the click action
-    # for text box it'd be focus
+    if @item.respond_to?(:on_click) && @item.on_click
+      eval @item.on_click
+    end
   end
 
-  if @mode.edit?
+  if @mode.edit? && !@controls.include?(@item)
     @item.focus
     @focused = @item
   end
@@ -214,8 +222,8 @@ def add_controls
     Button.new(label: 'new button', z: 1000, x: x, y: 10, width: 100, height: 50),
     Button.new(label: 'new text', z: 1000, x: x, y: 70, width: 100, height: 50),
     Button.new(label: 'new graphic', z: 1000, x: x, y: 130, width: 100, height: 50),
-    Button.new(label: 'closer', z: 1000, x: x, y: 190, width: 100, height: 50),
-    Button.new(label: 'farther', z: 1000, x: x, y: 250, width: 100, height: 50)
+    Button.new(label: 'closer', z: 1000, x: x, y: 190, width: 100, height: 50, on_click: 'closer(@focused)'),
+    Button.new(label: 'farther', z: 1000, x: x, y: 250, width: 100, height: 50, on_click: 'farther(@focused)')
   ]
 end
 
@@ -236,7 +244,7 @@ end
   y: 300,
   width: 50,
   height: 50,
-  text: 'Something F*cked This Way Comes!'
+  text: 'Etiam et dapibus velit, sit amet aliquam tortor. Morbi cursus odio vitae nulla elementum, non blandit dui luctus. Maecenas in convallis mauris.'
 )
 
 @objects << @box

@@ -7,6 +7,7 @@ module Ruby2D
     attr_accessor :tag
 
     def initialize opts = {}
+      @shifted = false
       @show_border = true
       @tag = opts[:tag]
       @lines = []
@@ -31,7 +32,7 @@ module Ruby2D
         y: opts[:y] - 5,
         width: opts[:width] + 10,
         height: opts[:height] + 10,
-        color: 'gray')
+        color: 'blue')
 
       @focus.opacity = 0
 
@@ -46,6 +47,14 @@ module Ruby2D
       super opts
 
       arrange_text!
+    end
+
+    def z= new_z
+      @cursor.z = new_z
+      @focus.z = new_z
+      @border.z = new_z
+      super new_z
+      @lines.each { |line| line.z = new_z }
     end
 
     def editable?
@@ -74,9 +83,11 @@ module Ruby2D
         @words += "\n"
       elsif str.include? 'space'
         @words += ' '
+      elsif str.include? 'capslock'
+        @shifted = !@shifted
       else
         elements = str.to_s.split('_')
-        @words += Keys.get(elements.last, elements.count == 2)
+        @words += Keys.get(elements.last, @shifted || elements.count == 2)
       end
 
       arrange_text!
@@ -112,13 +123,17 @@ module Ruby2D
     # def invert
     #   self.color = 'black'
     #   @border.color = 'white'
-    #   @lines.each { |line| line.color = 'white' }
+    #   @text_color = 'white'
+    #   arrange_text!
     # end
     #
     # def revert
     #   self.color = 'white'
     #   @border.color = 'black'
+    #   @text_color = 'black'
     #   arrange_text!
+    #   self.style = @style
+    #   self.color_scheme = @color_scheme
     # end
 
     def resize dx, dy
@@ -174,19 +189,34 @@ module Ruby2D
 
       return if self.width < 7
 
-      chars_across = (self.width / 7).floor
+      chars_across = (self.width.to_f / 7).floor
+      newline_count = @words.count("\n")
+      character_count = @words.length - newline_count
 
-      num_lines = [
-        (@words.length.to_f / chars_across).ceil + @words.count("\n"),
-        (self.height.to_f / 16).floor
-      ].min
+      n = @words.split("\n").reduce(0) do |memo, item|
+        memo += [(item.length.to_f / chars_across).ceil, 1].max
+      end
+
+      i = -1
+      while @words[i] == "\n"
+        n += 1
+        i -= 1
+      end
+
+      num_lines = [n, (self.height.to_f / 16).floor].min
 
       start_index = 0
 
       num_lines.times do |line_num|
-        next_linebreak = @words.index("\n", start_index) || @words.length + 1
+        next_linebreak = @words.index("\n", start_index)
 
-        end_index = [line_num * chars_across + chars_across, next_linebreak, @words.length].min
+        options = [
+          start_index + chars_across
+        ]
+
+        options << next_linebreak if next_linebreak
+
+        end_index = options.min
 
         range = start_index...end_index
 
@@ -200,7 +230,7 @@ module Ruby2D
           y: self.y + line_num * 16
         )
 
-        start_index = end_index == next_linebreak ? end_index + 1 : end_index
+        start_index = next_linebreak ? end_index + 1 : end_index
       end
 
       @cursor.z = self.z

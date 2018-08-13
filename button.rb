@@ -2,14 +2,25 @@ require 'ruby2d'
 
 module Ruby2D
   class Button < Rectangle
-    attr_accessor :tag, :label
+    attr_accessor :tag, :label, :on_click
 
     def initialize opts = {}
+      @on_click = opts[:on_click]
       @show_border = true
       @tag = opts[:tag]
       @label = opts[:label] || 'button'
 
       opts[:color] = 'white'
+
+      @focus = Rectangle.new(
+        z: opts[:z],
+        x: opts[:x] - 5,
+        y: opts[:y] - 5,
+        width: opts[:width] + 10,
+        height: opts[:height] + 10,
+        color: 'blue')
+
+      @focus.opacity = 0
 
       @border = Rectangle.new(
         z: opts[:z],
@@ -58,15 +69,25 @@ module Ruby2D
     end
 
     def z= new_z
-      @border.z = new_z
+      @focus.z = new_z
       @shadow.z = new_z
+      @border.z = new_z
       super new_z
       @text.z = new_z
+
+      puts "focus z = #{@focus.z}"
+      puts "shadow z = #{@shadow.z}"
+      puts "border z = #{@border.z}"
+      puts "self z = #{self.z}"
+      puts "text z = #{@text.z}"
     end
 
     def translate dx, dy
       self.x = @x + dx
       self.y = @y + dy
+
+      @focus.x = @focus.x + dx
+      @focus.y = @focus.y + dy
 
       @text.x = @text.x + dx
       @text.y = @text.y + dy
@@ -109,6 +130,18 @@ module Ruby2D
       hide_border unless @show_border
     end
 
+    def focus
+      @focus.opacity = 1
+    end
+
+    def defocus
+      @focus.opacity = 0
+    end
+
+    def editable?
+      false
+    end
+
     private
 
     def arrange_text!
@@ -117,6 +150,8 @@ module Ruby2D
     end
 
     def resize!
+      @focus.width = self.width + 10
+      @focus.height = self.height + 10
       @border.width = self.width + 2
       @border.height = self.height + 2
       @shadow.width = self.width
