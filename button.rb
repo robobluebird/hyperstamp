@@ -3,83 +3,106 @@ require 'ruby2d'
 module Ruby2D
   class Button < Rectangle
     attr_accessor :tag, :label, :on_click
+    attr_reader :color_scheme, :style
 
     def initialize opts = {}
-      @on_click = opts[:on_click]
-      @show_border = true
-      @tag = opts[:tag]
-      @label = opts[:label] || 'button'
+      @on_click = opts[:on_click] || opts['on_click']
+      @tag = opts[:tag] || opts['tag']
+      @label = opts[:label] || opts['label'] || 'button'
 
       opts[:color] = 'white'
 
+      z      = opts[:z] || opts['z']
+      x      = opts[:x] || opts['x']
+      y      = opts[:y] || opts['y']
+      width  = opts[:width] || opts['width']
+      height = opts[:height] || opts['height']
+
       @focus = Rectangle.new(
-        z: opts[:z],
-        x: opts[:x] - 5,
-        y: opts[:y] - 5,
-        width: opts[:width] + 10,
-        height: opts[:height] + 10,
+        z: z,
+        x: x - 5,
+        y: y - 5,
+        width: width + 10,
+        height: height + 10,
         color: 'blue')
 
       @focus.opacity = 0
 
       @border = Rectangle.new(
-        z: opts[:z],
-        x: opts[:x] - 1,
-        y: opts[:y] - 1,
-        width: opts[:width] + 2,
-        height: opts[:height] + 2,
+        z: z,
+        x: x - 1,
+        y: y - 1,
+        width: width + 2,
+        height: height + 2,
         color: 'black')
 
       @shadow = Rectangle.new(
-        z: opts[:z],
-        x: opts[:x] + 2,
-        y: opts[:y] + 2,
-        width: opts[:width],
-        height: opts[:height],
+        z: z,
+        x: x + 2,
+        y: y + 2,
+        width: width,
+        height: height,
         color: 'black')
 
       super opts
 
       @text = Text.new(
-        z: opts[:z],
+        z: z,
         text: @label,
         font: 'luximb.ttf',
         size: 12,
         color: 'black')
 
+      self.style = (opts[:style] || opts['style'] || :opaque).to_sym
+      self.color_scheme = (opts[:color_scheme] || opts['color_scheme'] || :black_on_white).to_sym
+
       arrange_text!
     end
 
-    def border?
-      @show_border
+    def color_scheme= scheme
+      case scheme
+      when :black_on_white
+        @border.color = 'black'
+        @shadow.color = 'black'
+        @text.color = 'black'
+        self.color = 'white'
+      when :white_on_black
+        @border.color = 'white'
+        @border.color = 'white'
+        @text.color = 'white'
+        self.color = 'black'
+      else
+        raise
+      end
+
+      @color_scheme = scheme
+
+      self.style = @style
     end
 
-    def show_border
-      @border.opacity = 1
-      @shadow.opacity = 1
-      self.opacity = 1
-      @show_border = true
-    end
+    def style= style
+      case style
+      when :opaque
+        @border.opacity = 1
+        @shadow.opacity = 1
+        self.opacity = 1
+      when :transparent
+        @border.opacity = 0
+        @shadow.opacity = 0
+        self.opacity = 0
+      else
+        raise
+      end
 
-    def hide_border
-      @border.opacity = 0
-      @shadow.opacity = 0
-      self.opacity = 0
-      @show_border = false
+      @style = style
     end
 
     def z= new_z
       @focus.z = new_z
-      @shadow.z = new_z
       @border.z = new_z
+      @shadow.z = new_z
       super new_z
       @text.z = new_z
-
-      puts "focus z = #{@focus.z}"
-      puts "shadow z = #{@shadow.z}"
-      puts "border z = #{@border.z}"
-      puts "self z = #{self.z}"
-      puts "text z = #{@text.z}"
     end
 
     def translate dx, dy
@@ -107,7 +130,7 @@ module Ruby2D
       arrange_text!
     end
 
-    def remove
+    def destroy
       @text.remove
       @border.remove
       @shadow.remove
@@ -127,7 +150,8 @@ module Ruby2D
       @text.color = 'black'
       @border.color = 'black'
       @shadow.color = 'black'
-      hide_border unless @show_border
+      self.style = @style
+      self.color_scheme = @color_scheme
     end
 
     def focus

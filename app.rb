@@ -10,24 +10,26 @@ require_relative 'text_box'
 @objects = []
 @controls = []
 @mode = Mode.new
-@filename = nil
+@filename = 'test.json'
+@deck = []
 
 set title: "..."
 set background: 'white'
 
 def write
-  # rep <- name
-
-  @objects.each do |o|
-    # rep <- o.serialize
-  end
 end
 
 def read
-  # File.open(@filename) do |f|
-    # objs = JSON.parse(f.read)
-    # objs.each do { |o| @objects << get_class(o).new(o.stuff) }
-  # end
+  File.open(@filename) do |f|
+    json = JSON.parse(f.read)
+
+    set title: json['name']
+
+    json['cards'].each do |card|
+      klazz = Object.const_get card['type'].split('_').map(&:capitalize).join
+      @objects.push klazz.new card.reject { |k,v| k == 'type' }.map { |k,v| [k.to_sym, v] }.to_h.merge(z: z)
+    end
+  end
 end
 
 def reset
@@ -53,7 +55,7 @@ def load_image filename
 
   m.write path
 
-  Graphic.new path: path, context: self, z: z
+  Graphic.new path: path, z: z
 end
 
 def closer item
@@ -100,12 +102,10 @@ end
 on :mouse_down do |e|
   control = false
 
-  @item = zord.find { |o| o.contains? e.x, e.y }
-
-  if !@item
-    @item = @controls.find { |o| o.contains? e.x, e.y }
-
+  if @item = @controls.find { |o| o.contains? e.x, e.y }
     control = true
+  else
+    @item = zord.find { |o| o.contains? e.x, e.y }
   end
 
   next unless @item
@@ -227,26 +227,28 @@ def add_controls
   ]
 end
 
-@objects << load_image('skel.jpg')
+# @objects << load_image('skel.jpg')
+#
+# @objects << Button.new(
+#   label: 'fun',
+#   z: z,
+#   x: 40,
+#   y: 40,
+#   width: 50,
+#   height: 50
+# )
+#
+# @box = TextBox.new(
+#   z: z,
+#   x: 300,
+#   y: 300,
+#   width: 50,
+#   height: 50,
+#   text: 'Etiam et dapibus velit, sit amet aliquam tortor. Morbi cursus odio vitae nulla elementum, non blandit dui luctus. Maecenas in convallis mauris.'
+# )
+#
+# @objects << @box
 
-@objects << Button.new(
-  label: 'fun',
-  z: z,
-  x: 40,
-  y: 40,
-  width: 50,
-  height: 50
-)
-
-@box = TextBox.new(
-  z: z,
-  x: 300,
-  y: 300,
-  width: 50,
-  height: 50,
-  text: 'Etiam et dapibus velit, sit amet aliquam tortor. Morbi cursus odio vitae nulla elementum, non blandit dui luctus. Maecenas in convallis mauris.'
-)
-
-@objects << @box
+read
 
 show

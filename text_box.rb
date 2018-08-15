@@ -8,16 +8,19 @@ module Ruby2D
 
     def initialize opts = {}
       @shifted = false
-      @show_border = true
-      @tag = opts[:tag]
+      @tag = opts[:tag] || opts['tag']
       @lines = []
-      @words = opts[:text]
-      @text_color = :black
-      @color_scheme = :black_on_white
-      @style = :default
+      @words = opts[:text] || opts['text']
+      @text_color = (opts[:text_color] || opts['text_color'] || :black).to_sym
+
+      z      = opts[:z] || opts['z']
+      x      = opts[:x] || opts['x']
+      y      = opts[:y] || opts['y']
+      width  = opts[:width] || opts['width']
+      height = opts[:height] || opts['height']
 
       @cursor = Line.new(
-        z: opts[:z],
+        z: z,
         x1: 0,
         y1: 0,
         x2: 0,
@@ -27,24 +30,27 @@ module Ruby2D
       @cursor.opacity = 0
 
       @focus = Rectangle.new(
-        z: opts[:z],
-        x: opts[:x] - 5,
-        y: opts[:y] - 5,
-        width: opts[:width] + 10,
-        height: opts[:height] + 10,
+        z: z,
+        x: x - 5,
+        y: y - 5,
+        width: width + 10,
+        height: height + 10,
         color: 'blue')
 
       @focus.opacity = 0
 
       @border = Rectangle.new(
-        z: opts[:z],
-        x: opts[:x] - 1,
-        y: opts[:y] - 1,
-        width: opts[:width] + 2,
-        height: opts[:height] + 2,
+        z: z,
+        x: x - 1,
+        y: y - 1,
+        width: width + 2,
+        height: height + 2,
         color: 'black')
 
       super opts
+
+      self.style = (opts[:style] || opts['style'] || :opaque).to_sym
+      self.color_scheme = (opts[:color_scheme] || opts['color_scheme'] || :black_on_white).to_sym
 
       arrange_text!
     end
@@ -63,10 +69,10 @@ module Ruby2D
 
     def style= style
       case style
-      when :default
+      when :opaque
         @border.opacity = 1
         self.opacity = 1
-      when :text_only
+      when :transparent
         @border.opacity = 0
         self.opacity = 0
       else
@@ -119,22 +125,6 @@ module Ruby2D
 
       arrange_text!
     end
-
-    # def invert
-    #   self.color = 'black'
-    #   @border.color = 'white'
-    #   @text_color = 'white'
-    #   arrange_text!
-    # end
-    #
-    # def revert
-    #   self.color = 'white'
-    #   @border.color = 'black'
-    #   @text_color = 'black'
-    #   arrange_text!
-    #   self.style = @style
-    #   self.color_scheme = @color_scheme
-    # end
 
     def resize dx, dy
       self.width = @width + dx
