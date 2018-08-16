@@ -26,8 +26,32 @@ module Ruby2D
       @focus.width = self.width + 10
       @focus.height = self.height + 10
 
-      @rd = self.width >= self.height ? :horizontal : :vertical
-      @r = @rd == :horizontal ? self.height.to_f / self.width : self.width.to_f / self.height
+      @o = if self.width > self.height
+             :l
+           elsif self.width < self.height
+             :p
+           else
+             :s
+           end
+
+      @r = if landscape?
+             self.height.to_f / self.width
+           elsif portrait?
+             self.width.to_f / self.height
+           else
+             1.0
+           end
+    end
+
+    def to_h
+      {
+        type: 'graphic',
+        path: @path,
+        x: self.x,
+        y: self.y,
+        width: self.width,
+        height: self.height
+      }
     end
 
     def z= new_z
@@ -55,22 +79,38 @@ module Ruby2D
       false
     end
 
+    def landscape?
+      @o == :l
+    end
+
+    def portrait?
+      @o == :p
+    end
+
+    def square?
+      @o == :s
+    end
+
     def resize dx, dy
       if !dx.to_i.zero?
         self.width = @width + dx
 
-        if @rd == :horizontal
+        if landscape?
           self.height = self.width * @r
-        else
+        elsif portrait?
           self.height = self.width / @r
+        else
+          self.height = self.width
         end
       else
         self.height = @height + dy
 
-        if @rd == :horizontal
+        if landscape?
           self.width = self.height / @r
-        else
+        elsif portait?
           self.width = self.height * @r
+        else
+          self.width = self.height
         end
       end
 

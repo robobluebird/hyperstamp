@@ -1,9 +1,11 @@
 require 'ruby2d'
 require 'mini_magick'
+require 'json'
 require_relative 'graphic'
 require_relative 'button'
 require_relative 'mode'
 require_relative 'text_box'
+require_relative 'border'
 
 @z = -1
 @item = nil
@@ -11,19 +13,41 @@ require_relative 'text_box'
 @controls = []
 @mode = Mode.new
 @filename = 'test.json'
-@deck = []
+@name = nil
+@created_at = nil
+@updated_at = nil
 
 set title: "..."
 set background: 'white'
 
 def write
+  @updated_at = Time.now
+
+  json = {}
+
+  json[:name] = @name
+  json[:created_at] = @created_at
+  json[:updated_at] = @updated_at.to_i
+  json[:cards] = [].tap do |rep|
+    zord.reverse.each do |object|
+      rep << object.to_h
+    end
+  end
+
+  File.open(@filename, 'w') do |f|
+    f.write JSON.pretty_generate json
+  end
 end
 
 def read
   File.open(@filename) do |f|
     json = JSON.parse(f.read)
 
-    set title: json['name']
+    @name = json['name']
+    set title: @name
+
+    @created_at = json['created_at']
+    @updated_at = json['updated_at']
 
     json['cards'].each do |card|
       klazz = Object.const_get card['type'].split('_').map(&:capitalize).join
@@ -71,6 +95,8 @@ def closer item
   z1, z2 = item.z, n.z
   item.z = z2
   n.z = z1
+
+  write
 end
 
 def farther item
@@ -84,6 +110,8 @@ def farther item
   z1, z2 = item.z, n.z
   item.z = z2
   n.z = z1
+
+  write
 end
 
 def z
@@ -128,6 +156,7 @@ on :mouse_up do |e|
   @item.revert if @item && @item.respond_to?(:revert)
 
   if @mtype
+    write
     @mtype = nil
   else
     if @item.respond_to?(:on_click) && @item.on_click
@@ -177,16 +206,11 @@ on :key_up do |e|
 
   if @focused && @focused.editable?
     @focused.append key.to_s
+    write
     next
   end
 
-  if key == :g
-    if @objects.first.border?
-      @objects.first.hide_border
-    else
-      @objects.first.show_border
-    end
-  elsif key == :e
+  if key == :e
     if @mode.edit?
       @mode.interact
       remove_controls
@@ -194,22 +218,12 @@ on :key_up do |e|
       @mode.edit
       add_controls
     end
-  elsif key == :r
-    reset
-    @mode.edit
-    add_controls
-  elsif key == :s
-    @box.style = @box.style == :default ? :text_only : :default
-  elsif key == :x
-    @box.color_scheme = @box.color_scheme == :black_on_white ? :white_on_black : :black_on_white
-  elsif key == :h
-    @box.text_color = @box.text_color == :black ? :white : :black
   end
 end
 
 def remove_controls
   @controls.each do |c|
-    c.remove
+    c.destroy
   end
 
   @controls.clear
@@ -217,37 +231,16 @@ end
 
 def add_controls
   x = get(:width) - 110
+  y = get(:height)
 
   @controls = [
-    Button.new(label: 'new button', z: 1000, x: x, y: 10, width: 100, height: 50),
-    Button.new(label: 'new text', z: 1000, x: x, y: 70, width: 100, height: 50),
-    Button.new(label: 'new graphic', z: 1000, x: x, y: 130, width: 100, height: 50),
-    Button.new(label: 'closer', z: 1000, x: x, y: 190, width: 100, height: 50, on_click: 'closer(@focused)'),
-    Button.new(label: 'farther', z: 1000, x: x, y: 250, width: 100, height: 50, on_click: 'farther(@focused)')
+    Button.new(label: 'new button', z: 1000, x: x, y: 10, width: 100, height: 25),
+    Button.new(label: 'new text', z: 1000, x: x, y: 45, width: 100, height: 25),
+    Button.new(label: 'new graphic', z: 1000, x: x, y: 80, width: 100, height: 25),
+    Button.new(label: 'closer', z: 1000, x: x, y: y - 70, width: 100, height: 25, on_click: 'closer(@focused)'),
+    Button.new(label: 'farther', z: 1000, x: x, y: y - 35, width: 100, height: 25, on_click: 'farther(@focused)')
   ]
 end
-
-# @objects << load_image('skel.jpg')
-#
-# @objects << Button.new(
-#   label: 'fun',
-#   z: z,
-#   x: 40,
-#   y: 40,
-#   width: 50,
-#   height: 50
-# )
-#
-# @box = TextBox.new(
-#   z: z,
-#   x: 300,
-#   y: 300,
-#   width: 50,
-#   height: 50,
-#   text: 'Etiam et dapibus velit, sit amet aliquam tortor. Morbi cursus odio vitae nulla elementum, non blandit dui luctus. Maecenas in convallis mauris.'
-# )
-#
-# @objects << @box
 
 read
 

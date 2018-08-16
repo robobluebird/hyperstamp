@@ -59,6 +59,21 @@ module Ruby2D
       arrange_text!
     end
 
+    def to_h
+      {
+        type: 'button',
+        label: @label,
+        tag: @tag,
+        x: self.x,
+        y: self.y,
+        height: self.height,
+        width: self.width,
+        style: @style,
+        color_scheme: @color_scheme,
+        on_click: @on_click
+      }
+    end
+
     def color_scheme= scheme
       case scheme
       when :black_on_white
@@ -134,8 +149,7 @@ module Ruby2D
       @text.remove
       @border.remove
       @shadow.remove
-
-      super
+      self.remove
     end
 
     def invert
