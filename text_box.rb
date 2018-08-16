@@ -2,8 +2,8 @@ require 'ruby2d'
 require_relative 'keys'
 
 module Ruby2D
-  class TextBox < Rectangle
-    attr_reader :words, :text_color, :color_scheme, :style
+  class TextBox
+    attr_reader :words, :text_color, :color_scheme, :style, :x, :y, :width, :height, :z
     attr_accessor :tag
 
     def initialize opts = {}
@@ -80,10 +80,6 @@ module Ruby2D
 
     def contains? x, y
       (@x..(@x + @width)).cover?(x) && (@y..(@y + @height)).cover?(y)
-    end
-
-    def z
-      @z
     end
 
     def z= new_z
@@ -164,8 +160,8 @@ module Ruby2D
     end
 
     def resize dx, dy
-      self.width = self.width + dx
-      self.height = self.height + dy
+      @width = @width + dx
+      @height = @height + dy
 
       @border.resize dx, dy
       @focus.resize dx, dy
@@ -177,8 +173,8 @@ module Ruby2D
     end
 
     def translate dx, dy
-      self.x = self.x + dx
-      self.y = self.y + dy
+      @x = @x + dx
+      @y = @y + dy
 
       @border.translate dx, dy
       @focus.translate dx, dy
@@ -212,9 +208,9 @@ module Ruby2D
     def arrange_text!
       clear_text!
 
-      return if self.width < 7
+      return if @content.width < 7
 
-      chars_across = (self.width.to_f / 7).floor
+      chars_across = (@content.width.to_f / 7).floor
       newline_count = @words.count("\n")
       character_count = @words.length - newline_count
 
@@ -228,7 +224,7 @@ module Ruby2D
         i -= 1
       end
 
-      num_lines = [n, (self.height.to_f / 16).floor].min
+      num_lines = [n, (@content.height.to_f / 16).floor].min
 
       start_index = 0
 
@@ -247,7 +243,7 @@ module Ruby2D
 
         @lines << Text.new(
           color: @text_color.to_s,
-          z: self.z,
+          z: @z,
           text: @words[range] || '',
           font: 'luximb.ttf',
           size: 12,
@@ -258,7 +254,7 @@ module Ruby2D
         start_index = next_linebreak ? end_index + 1 : end_index
       end
 
-      @cursor.z = self.z
+      @cursor.z = @z
       @cursor.x1 = @content.x + (@lines.last ? @lines.last.text.length : 0) * 7
       @cursor.x2 = @cursor.x1
       @cursor.y1 = @content.y + (num_lines.zero? ? 0 : num_lines - 1) * 16

@@ -1,8 +1,27 @@
 {
   "name": "a test",
   "created_at": 1534095536,
-  "updated_at": 1534432899,
+  "updated_at": 1534433641,
   "cards": [
+    {
+      "type": "graphic",
+      "path": "images/skel.jpg",
+      "x": 0,
+      "y": 0,
+      "width": 640.0,
+      "height": 480.0
+    },
+    {
+      "type": "text_box",
+      "tag": "pep",
+      "text": "Lorem ipsum doler banana.\n\n\nHEY?!",
+      "x": 248,
+      "y": 263,
+      "width": 162,
+      "height": 145,
+      "style": "opaque",
+      "color_scheme": "black_on_white"
+    },
     {
       "type": "button",
       "label": "fun!",
@@ -14,25 +33,6 @@
       "style": "opaque",
       "color_scheme": "black_on_white",
       "on_click": null
-    },
-    {
-      "type": "graphic",
-      "path": "images/skel.jpg",
-      "x": 305,
-      "y": 54,
-      "width": 198.0,
-      "height": 148.5
-    },
-    {
-      "type": "text_box",
-      "tag": "pep",
-      "text": "Lorem ipsum doler banana.\n\n\nHEY?!",
-      "x": 0,
-      "y": 406,
-      "width": 183,
-      "height": 74,
-      "style": "opaque",
-      "color_scheme": "black_on_white"
     }
   ]
 }
