@@ -1,5 +1,6 @@
 require 'ruby2d'
 require_relative 'keys'
+require_relative 'font'
 
 module Ruby2D
   class TextBox
@@ -19,15 +20,19 @@ module Ruby2D
       @width  = opts[:width] || opts['width']
       @height = opts[:height] || opts['height']
 
+      @font = Font.new(
+        type: (opts.dig(:font, :type) || :default).to_sym,
+        size: (opts.dig(:font, :size) || :default).to_sym
+      )
+
       @cursor = Line.new(
         z: @z,
         x1: 0,
         y1: 0,
         x2: 0,
-        y2: 16,
-        color: 'black')
-
-      @cursor.opacity = 0
+        y2: @font.height,
+        color: 'black'
+      )
 
       @focus = Border.new(
         z: @z,
@@ -36,7 +41,8 @@ module Ruby2D
         y: @y - 5,
         width: @width + 10,
         height: @height + 10,
-        color: 'blue')
+        color: 'blue'
+      )
 
       @focus.hide
 
@@ -47,7 +53,8 @@ module Ruby2D
         width: @width,
         height: @height,
         thickness: 1,
-        color: 'black')
+        color: 'black'
+      )
 
       @content = Rectangle.new(
         z: @z,
@@ -60,6 +67,7 @@ module Ruby2D
 
       self.style = (opts[:style] || opts['style'] || :opaque).to_sym
       self.color_scheme = (opts[:color_scheme] || opts['color_scheme'] || :black_on_white).to_sym
+      @cursor.opacity = 0
 
       arrange_text!
     end
@@ -74,7 +82,11 @@ module Ruby2D
         width: @width,
         height: @height,
         style: @style,
-        color_scheme: @color_scheme
+        color_scheme: @color_scheme,
+        font: {
+          type: @font.type,
+          size: @font.size.to_s
+        }
       }
     end
 
@@ -208,9 +220,9 @@ module Ruby2D
     def arrange_text!
       clear_text!
 
-      return if @content.width < 7
+      return if @content.width < @font.width
 
-      chars_across = (@content.width.to_f / 7).floor
+      chars_across = (@content.width.to_f / @font.width).floor
       newline_count = @words.count("\n")
       character_count = @words.length - newline_count
 
@@ -224,7 +236,7 @@ module Ruby2D
         i -= 1
       end
 
-      num_lines = [n, (@content.height.to_f / 16).floor].min
+      num_lines = [n, (@content.height.to_f / @font.height).floor].min
 
       start_index = 0
 
@@ -245,20 +257,20 @@ module Ruby2D
           color: @text_color.to_s,
           z: @z,
           text: @words[range] || '',
-          font: 'luximb.ttf',
-          size: 12,
+          font: @font.file,
+          size: @font.size.to_i,
           x: @content.x,
-          y: @content.y + line_num * 16
+          y: @content.y + line_num * @font.height
         )
 
         start_index = next_linebreak ? end_index + 1 : end_index
       end
 
       @cursor.z = @z
-      @cursor.x1 = @content.x + (@lines.last ? @lines.last.text.length : 0) * 7
+      @cursor.x1 = @content.x + (@lines.last ? @lines.last.text.length : 0) * @font.width
       @cursor.x2 = @cursor.x1
-      @cursor.y1 = @content.y + (num_lines.zero? ? 0 : num_lines - 1) * 16
-      @cursor.y2 = @content.y + (num_lines.zero? ? 1 : num_lines) * 16
+      @cursor.y1 = @content.y + (num_lines.zero? ? 0 : num_lines - 1) * @font.height
+      @cursor.y2 = @content.y + (num_lines.zero? ? 1 : num_lines) * @font.height
     end
   end
 end

@@ -24,7 +24,8 @@ module Ruby2D
         y: y - 5,
         width: width + 10,
         height: height + 10,
-        color: 'blue')
+        color: 'blue'
+      )
 
       @focus.opacity = 0
 
@@ -34,7 +35,8 @@ module Ruby2D
         y: y - 1,
         width: width + 2,
         height: height + 2,
-        color: 'black')
+        color: 'black'
+      )
 
       @shadow = Rectangle.new(
         z: z,
@@ -42,16 +44,23 @@ module Ruby2D
         y: y + 2,
         width: width,
         height: height,
-        color: 'black')
+        color: 'black'
+      )
 
       super opts
+
+      @font = Font.new(
+        type: (opts.dig(:font, :type) || :default).to_sym,
+        size: (opts.dig(:font, :size) || :default).to_sym
+      )
 
       @text = Text.new(
         z: z,
         text: @label,
-        font: 'luximb.ttf',
-        size: 12,
-        color: 'black')
+        font: @font.file,
+        size: @font.size.to_i,
+        color: 'black'
+      )
 
       self.style = (opts[:style] || opts['style'] || :opaque).to_sym
       self.color_scheme = (opts[:color_scheme] || opts['color_scheme'] || :black_on_white).to_sym
@@ -70,7 +79,11 @@ module Ruby2D
         width: self.width,
         style: @style,
         color_scheme: @color_scheme,
-        on_click: @on_click
+        on_click: @on_click,
+        font: {
+          type: @font.type,
+          size: @font.size.to_s
+        }
       }
     end
 

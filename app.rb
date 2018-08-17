@@ -127,6 +127,34 @@ def resizing? item, e
     ((item.y + item.height - 10)..(item.y + item.height)).cover?(e.y)
 end
 
+def new_button
+  @objects << Button.new(
+    z: z,
+    x: 0,
+    y: 0,
+    width: 100,
+    height: 50,
+    label: 'new button')
+
+  write
+end
+
+def new_text_box
+  @objects << TextBox.new(
+    z: z,
+    x: 0,
+    y: 0,
+    width: 100,
+    height: 100,
+    text: '')
+
+  write
+end
+
+def graphic
+  # need to show a prompt for this one
+end
+
 on :mouse_down do |e|
   control = false
 
@@ -233,12 +261,14 @@ def add_controls
   x = get(:width) - 110
   y = get(:height)
 
+  font = Font.new size: :small
+
   @controls = [
-    Button.new(label: 'new button', z: 1000, x: x, y: 10, width: 100, height: 25),
-    Button.new(label: 'new text', z: 1000, x: x, y: 45, width: 100, height: 25),
-    Button.new(label: 'new graphic', z: 1000, x: x, y: 80, width: 100, height: 25),
-    Button.new(label: 'closer', z: 1000, x: x, y: y - 70, width: 100, height: 25, on_click: 'closer(@focused)'),
-    Button.new(label: 'farther', z: 1000, x: x, y: y - 35, width: 100, height: 25, on_click: 'farther(@focused)')
+    Button.new(font: { type: font.type, size: font.size.to_s }, label: 'new button', z: 1000, x: x, y: 10, width: 100, height: 25, on_click: 'new_button'),
+    Button.new(font: { type: font.type, size: font.size.to_s }, label: 'new text', z: 1000, x: x, y: 45, width: 100, height: 25, on_click: 'new_text_box'),
+    Button.new(font: { type: font.type, size: font.size.to_s }, label: 'new graphic', z: 1000, x: x, y: 80, width: 100, height: 25, on_click: 'new_graphic'),
+    Button.new(font: { type: font.type, size: font.size.to_s }, label: 'closer', z: 1000, x: x, y: y - 70, width: 100, height: 25, on_click: 'closer(@focused)'),
+    Button.new(font: { type: font.type, size: font.size.to_s }, label: 'farther', z: 1000, x: x, y: y - 35, width: 100, height: 25, on_click: 'farther(@focused)')
   ]
 end
 
