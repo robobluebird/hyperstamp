@@ -21,8 +21,8 @@ module Ruby2D
       @height = opts[:height] || opts['height']
 
       @font = Font.new(
-        type: (opts.dig(:font, :type) || :default).to_sym,
-        size: (opts.dig(:font, :size) || :default).to_sym
+        type: (opts.dig(:font, :type) || :lux).to_sym,
+        size: opts.dig(:font, :size)
       )
 
       @cursor = Line.new(

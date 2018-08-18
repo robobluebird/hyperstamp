@@ -41,17 +41,17 @@ end
 
 def read
   File.open(@filename) do |f|
-    json = JSON.parse(f.read)
+    json = JSON.parse(f.read, symbolize_names: true)
 
-    @name = json['name']
+    @name = json[:name]
     set title: @name
 
-    @created_at = json['created_at']
-    @updated_at = json['updated_at']
+    @created_at = json[:created_at]
+    @updated_at = json[:updated_at]
 
-    json['cards'].each do |card|
-      klazz = Object.const_get card['type'].split('_').map(&:capitalize).join
-      @objects.push klazz.new card.reject { |k,v| k == 'type' }.map { |k,v| [k.to_sym, v] }.to_h.merge(z: z)
+    json[:cards].each do |card|
+      klazz = Object.const_get card[:type].split('_').map(&:capitalize).join
+      @objects.push klazz.new card.merge(z: z)
     end
   end
 end
@@ -261,7 +261,7 @@ def add_controls
   x = get(:width) - 110
   y = get(:height)
 
-  font = Font.new size: :small
+  font = Font.new size: 12
 
   @controls = [
     Button.new(font: { type: font.type, size: font.size.to_s }, label: 'new button', z: 1000, x: x, y: 10, width: 100, height: 25, on_click: 'new_button'),

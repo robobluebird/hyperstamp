@@ -1,8 +1,9 @@
+require 'json'
+
 class FontSize
-  attr_reader :type, :width, :height, :size
+  attr_reader :width, :height, :size
 
   def initialize opts = {}
-    @type = opts[:type].to_sym
     @width = opts[:width]
     @height = opts[:height]
     @size = opts[:size]
@@ -11,60 +12,92 @@ class FontSize
   def to_i
     @size
   end
-
-  def to_s
-    @type.to_s
-  end
 end
 
 class FontDef
-  attr_reader :type, :file
+  attr_reader :type, :file, :sizes
 
   def initialize opts = {}
-    @type = opts[:type].to_sym
+    @type = opts[:type]
     @file = opts[:file]
+    @sizes = load_sizes opts[:sizes]
+  end
+
+  def width_for size
+    @sizes.find { |s| s.size == size }.width
+  end
+
+  def height_for size
+    @sizes.find { |s| s.size == size }.height
+  end
+
+  private
+
+  def load_sizes sizes
+    sizes.sort! { |a, b| a['size'] <=> b['size'] }.map do |s|
+      FontSize.new size: s['size'], width: s['width'], height: s['height']
+    end
+  end
+end
+
+class Fonts
+  @@fonts = []
+  @@loaded = false
+
+  def self.load
+    fonts = File.open('fonts.json') do |f|
+      JSON.parse f.read
+    end
+
+    fonts.each_pair do |font_file, sizes|
+      font_def = FontDef.new(
+        type: font_file.split('.').first.to_sym,
+        file: font_file,
+        sizes: sizes)
+
+      @@fonts << font_def
+
+      @@loaded = true
+    end
+  end
+
+  def self.loaded?
+    @@loaded
+  end
+
+  def self.all
+    @@fonts
+  end
+
+  def self.types
+    @@fonts.map(&:type)
   end
 end
 
 class Font
   def initialize opts = {}
-    @fonts = [
-      FontDef.new(type: :default, file: 'luximb.ttf')
-    ]
+    Fonts.load unless Fonts.loaded?
 
-    @sizes = [
-      FontSize.new(type: 'smallest', width: 5, height: 11, size: 8),
-      FontSize.new(type: 'small', width: 7, height: 16, size: 12),
-      FontSize.new(type: 'default', width: 10, height: 21, size: 16),
-      FontSize.new(type: 'larger', width: 12, height: 26, size: 20),
-      FontSize.new(type: 'largest', width: 14, height: 31, size: 24),
-      FontSize.new(type: 'monstrous', width: 19, height: 42, size: 32),
-      FontSize.new(type: 'insane', width: 38, height: 79, size: 64),
-      FontSize.new(type: 'planet', width: 77, height: 158, size: 128)
-    ]
-
-    self.size = (opts[:size] || :default).to_sym
-    self.font = (opts[:type] || :default).to_sym
+    self.font = (opts[:type] || :lux).to_sym
+    self.size = (opts[:size] || 16).to_i
   end
 
-  def font= word
-    font = @fonts.find { |f| f.type == word }
-    raise unless font
-    @font = font
+  def font= type
+    font_def = Fonts.all.find { |f| f.type == type }
+    raise unless font_def
+    @font_def = font_def
+  end
+
+  def size= num
+    @size = num
   end
 
   def type
-    @font.type.to_s
+    @font_def.type
   end
 
   def file
-    @font.file
-  end
-
-  def size= word
-    size = @sizes.find { |s| s.type == word }
-    raise unless size
-    @size = size
+    "fonts/#{ @font_def.file }"
   end
 
   def size
@@ -72,10 +105,14 @@ class Font
   end
 
   def width
-    @size.width
+    @font_def.width_for @size
   end
 
   def height
-    @size.height
+    @font_def.height_for @size
+  end
+
+  def self.types
+    Fonts.load unless Fonts.loaded?
   end
 end
