@@ -2,7 +2,7 @@ require 'Ruby2D'
 
 module Ruby2D
   class Border
-    attr_reader :x, :y, :width, :height
+    attr_reader :x, :y, :width, :height, :thickness
 
     def initialize opts = {}
       @z = opts[:z]
@@ -49,6 +49,10 @@ module Ruby2D
         x2: opts[:x] + @factor,
         y2: opts[:y] + opts[:height],
         color: @color)
+
+      @only = Array(opts[:only] || []).map(&:to_sym)
+
+      show
     end
 
     def color= color
@@ -70,18 +74,26 @@ module Ruby2D
       @left.z = new_z
     end
 
-    def destroy
+    def remove
       @top.remove
       @right.remove
       @bottom.remove
       @left.remove
     end
 
+    def add
+      @top.add
+      @right.add
+      @bottom.add
+      @left.add
+    end
+
     def show
-      @top.opacity = 1
-      @right.opacity = 1
-      @bottom.opacity = 1
-      @left.opacity = 1
+      all = @only.empty?
+      @top.opacity = all || @only.include?(:top) ? 1 : 0
+      @right.opacity = all || @only.include?(:right) ? 1 : 0
+      @bottom.opacity = all || @only.include?(:bottom) ? 1 : 0
+      @left.opacity = all || @only.include?(:left) ? 1 : 0
     end
 
     def hide
@@ -94,6 +106,16 @@ module Ruby2D
     def resize dx, dy
       @width += dx
       @height += dy
+      size_up!
+    end
+
+    def width= width
+      @width = width
+      size_up!
+    end
+
+    def height= height
+      @height = height
       size_up!
     end
 

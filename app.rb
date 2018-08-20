@@ -6,13 +6,16 @@ require_relative 'button'
 require_relative 'mode'
 require_relative 'text_box'
 require_relative 'border'
+require_relative 'menu/menu'
+require_relative 'menu/menu_item'
+require_relative 'menu/menu_element'
 
 @z = -1
 @item = nil
 @objects = []
 @controls = []
 @mode = Mode.new
-@filename = 'test.json'
+@filename = 'picker.json'
 @name = nil
 @created_at = nil
 @updated_at = nil
@@ -21,13 +24,13 @@ set title: "..."
 set background: 'white'
 
 def write
-  @updated_at = Time.now
+  @updated_at = Time.now.to_i
 
   json = {}
 
   json[:name] = @name
   json[:created_at] = @created_at
-  json[:updated_at] = @updated_at.to_i
+  json[:updated_at] = @updated_at
   json[:cards] = [].tap do |rep|
     zord.reverse.each do |object|
       rep << object.to_h
@@ -160,6 +163,8 @@ on :mouse_down do |e|
 
   if @item = @controls.find { |o| o.contains? e.x, e.y }
     control = true
+  elsif @item = @menu.items.find { |o| o.contains? e.x, e.y }
+    menu = true
   else
     @item = zord.find { |o| o.contains? e.x, e.y }
   end
@@ -168,7 +173,7 @@ on :mouse_down do |e|
 
   @item.invert if @item.respond_to? :invert
 
-  @mtype = if @mode.edit? && !control
+  @mtype = if @mode.edit? && !control && !menu
              resizing?(@item, e) ? :resize : :translate
            end
 end
@@ -264,13 +269,15 @@ def add_controls
   font = Font.new size: 12
 
   @controls = [
-    Button.new(font: { type: font.type, size: font.size.to_s }, label: 'new button', z: 1000, x: x, y: 10, width: 100, height: 25, on_click: 'new_button'),
-    Button.new(font: { type: font.type, size: font.size.to_s }, label: 'new text', z: 1000, x: x, y: 45, width: 100, height: 25, on_click: 'new_text_box'),
-    Button.new(font: { type: font.type, size: font.size.to_s }, label: 'new graphic', z: 1000, x: x, y: 80, width: 100, height: 25, on_click: 'new_graphic'),
-    Button.new(font: { type: font.type, size: font.size.to_s }, label: 'closer', z: 1000, x: x, y: y - 70, width: 100, height: 25, on_click: 'closer(@focused)'),
-    Button.new(font: { type: font.type, size: font.size.to_s }, label: 'farther', z: 1000, x: x, y: y - 35, width: 100, height: 25, on_click: 'farther(@focused)')
+    Button.new(font: { type: font.type, size: font.size }, label: 'new button', z: 1000, x: x, y: 10, width: 100, height: 25, on_click: 'new_button'),
+    Button.new(font: { type: font.type, size: font.size }, label: 'new text', z: 1000, x: x, y: 45, width: 100, height: 25, on_click: 'new_text_box'),
+    Button.new(font: { type: font.type, size: font.size }, label: 'new graphic', z: 1000, x: x, y: 80, width: 100, height: 25, on_click: 'new_graphic'),
+    Button.new(font: { type: font.type, size: font.size }, label: 'closer', z: 1000, x: x, y: y - 70, width: 100, height: 25, on_click: 'closer(@focused)'),
+    Button.new(font: { type: font.type, size: font.size }, label: 'farther', z: 1000, x: x, y: y - 35, width: 100, height: 25, on_click: 'farther(@focused)')
   ]
 end
+
+@menu = Menu.new width: get(:width)
 
 read
 

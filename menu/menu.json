@@ -1,0 +1,27 @@
+[
+  {
+    "text": "file",
+    "elements": [
+      {
+        "text": "open"
+      },
+      {
+        "text": "save"
+      },
+      {
+        "text": "save as"
+      }
+    ]
+  },
+  {
+    "text": "edit",
+    "elements": [
+      {
+        "text": "copy"
+      },
+      {
+        "text": "paste"
+      }
+    ]
+  }
+]

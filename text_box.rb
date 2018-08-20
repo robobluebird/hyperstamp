@@ -58,10 +58,10 @@ module Ruby2D
 
       @content = Rectangle.new(
         z: @z,
-        x: @x + 1,
-        y: @y + 1,
-        width: @width - 2,
-        height: @height - 2,
+        x: @x + @border.thickness,
+        y: @y + @border.thickness,
+        width: @width - (@border.thickness * 2),
+        height: @height - (@border.thickness * 2),
         color: 'white'
       )
 

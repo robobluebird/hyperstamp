@@ -1,11 +1,21 @@
 require 'ruby2d'
 
 module Ruby2D
-  class Picker < Rectangle
-    attr_reader :items
+  class Picker
+    attr_reader :x, :y, :width, :height, :items
 
     def initialize opts = {}
       super opts
+    end
+
+    def to_h
+      {
+        type: :picker,
+        x: @x,
+        y: @y,
+        width: @width,
+        height: @height
+      }
     end
 
     def pick item
@@ -13,8 +23,8 @@ module Ruby2D
     end
   end
 
-  class PickerItem < Rectangle
-    attr_reader :label, :value
+  class PickerItem
+    attr_reader :x, :y, :width, :height, :items, :label, :value
 
     def initialize opts = {}
       @picker = opts[:picker]
