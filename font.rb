@@ -1,5 +1,3 @@
-require 'json'
-
 class FontSize
   attr_reader :width, :height, :size
 

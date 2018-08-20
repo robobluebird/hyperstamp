@@ -1,12 +1,15 @@
 module Ruby2D
   class MenuElement
-    attr_reader :x, :y, :width, :height
+    attr_reader :x, :y, :width, :height, :on_click
 
     def initialize opts = {}
+      extend Ruby2D::DSL
+
       @x = opts[:x]
       @y = opts[:y]
       @height = 20
       @z = 2000
+      @on_click = 'pp @objects'
 
       @border = Border.new(
         x: @x,
@@ -46,6 +49,26 @@ module Ruby2D
       @background.height = @height - 2
 
       @text.x = @text.x + 10
+
+      @hover_event = on :mouse_move do |e|
+        if contains? e.x, e.y
+          @background.color = "black"
+          @text.color = "white"
+        else
+          @background.color = "white"
+          @text.color = "black"
+        end
+      end
+
+      @mouse_up_event = on :mouse_up do |e|
+        if contains? e.x, e.y
+          Application.class_variable_get(:@@window).instance_eval('pp @objects')
+        end
+      end
+    end
+
+    def contains? x, y
+      (@x..(@x + @width)).cover?(x) && (@y..(@y + @height)).cover?(y)
     end
 
     def remove

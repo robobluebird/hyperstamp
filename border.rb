@@ -1,5 +1,3 @@
-require 'Ruby2D'
-
 module Ruby2D
   class Border
     attr_reader :x, :y, :width, :height, :thickness

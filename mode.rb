@@ -1,5 +1,3 @@
-require 'ruby2d'
-
 module Ruby2D
   class Mode
     def initialize

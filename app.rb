@@ -1,6 +1,8 @@
 require 'ruby2d'
 require 'mini_magick'
 require 'json'
+require_relative 'keys'
+require_relative 'font'
 require_relative 'graphic'
 require_relative 'button'
 require_relative 'mode'
@@ -184,7 +186,7 @@ on :mouse_up do |e|
     @focused = nil
   end
 
-  next unless @item
+  next unless @item 
 
   @item.revert if @item && @item.respond_to?(:revert)
 
@@ -193,11 +195,11 @@ on :mouse_up do |e|
     @mtype = nil
   else
     if @item.respond_to?(:on_click) && @item.on_click
-      eval @item.on_click
+      instance_eval @item.on_click
     end
   end
 
-  if @mode.edit? && !@controls.include?(@item)
+  if @mode.edit? && !@controls.include?(@item) && @item.respond_to?(:focus)
     @item.focus
     @focused = @item
   end
@@ -208,7 +210,7 @@ end
 on :mouse_move do |e|
   if @item && @mtype
     e.delta_x = 0 if (@item.x + e.delta_x < 0 && @mtype == :translate) || @item.x + @item.width + e.delta_x > get(:width) || @item.x + @item.width + e.delta_x < 0
-    e.delta_y = 0 if (@item.y + e.delta_y < 0 && @mtype == :translate) || @item.y + @item.height + e.delta_y > get(:height) || @item.y + @item.height + e.delta_y < 0
+    e.delta_y = 0 if (@item.y + e.delta_y < 20 && @mtype == :translate) || @item.y + @item.height + e.delta_y > get(:height) || @item.y + @item.height + e.delta_y < 0
 
     @item.send @mtype, e.delta_x, e.delta_y
   end

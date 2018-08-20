@@ -1,5 +1,3 @@
-require 'ruby2d'
-
 # m = MiniMagick::Image.new('tape2.jpg')
 # m.format 'png'
 # m.resize '512x512'

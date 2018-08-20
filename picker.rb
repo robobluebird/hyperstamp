@@ -1,5 +1,3 @@
-require 'ruby2d'
-
 module Ruby2D
   class Picker
     attr_reader :x, :y, :width, :height, :items

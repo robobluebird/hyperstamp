@@ -1,5 +1,3 @@
-require 'ruby2d'
-
 module Ruby2D
   class Button < Rectangle
     attr_accessor :tag, :label, :on_click

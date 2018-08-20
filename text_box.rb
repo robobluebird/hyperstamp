@@ -1,7 +1,3 @@
-require 'ruby2d'
-require_relative 'keys'
-require_relative 'font'
-
 module Ruby2D
   class TextBox
     attr_reader :words, :text_color, :color_scheme, :style, :x, :y, :width, :height, :z
