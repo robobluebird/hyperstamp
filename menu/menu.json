@@ -3,13 +3,28 @@
     "text": "file",
     "elements": [
       {
-        "text": "open"
+        "text": "new stack",
+        "on_click": ""
       },
       {
-        "text": "save"
+        "text": "open stack",
+        "on_click": ""
       },
       {
-        "text": "save as"
+        "text": "save stack",
+        "on_click": ""
+      },
+      {
+        "text": "save stack as",
+        "on_click": ""
+      },
+      {
+        "text": "print",
+        "on_click": ""
+      },
+      {
+        "text": "quit",
+        "on_click": ""
       }
     ]
   },
@@ -17,10 +32,165 @@
     "text": "edit",
     "elements": [
       {
-        "text": "copy"
+        "text": "undo",
+        "on_click": ""
       },
       {
-        "text": "paste"
+        "text": "cut",
+        "on_click": ""
+      },
+      {
+        "text": "copy",
+        "on_click": ""
+      },
+      {
+        "text": "paste",
+        "on_click": ""
+      },
+      {
+        "text": "clear",
+        "on_click": ""
+      },
+      {
+        "text": "new card",
+        "on_click": ""
+      },
+      {
+        "text": "copy card",
+        "on_click": ""
+      },
+      {
+        "text": "paste card",
+        "on_click": ""
+      },
+      {
+        "text": "font",
+        "on_click": ""
+      },
+      {
+        "text": "background",
+        "on_click": ""
+      },
+      {
+        "text": "icon",
+        "on_click": ""
+      }
+    ]
+  },
+  {
+    "text": "go",
+    "elements": [
+      {
+        "text": "home",
+        "on_click": ""
+      },
+      {
+        "text": "first",
+        "on_click": ""
+      },
+      {
+        "text": "prev",
+        "on_click": ""
+      },
+      {
+        "text": "next",
+        "on_click": ""
+      },
+      {
+        "text": "last",
+        "on_click": ""
+      },
+      {
+        "text": "find",
+        "on_click": ""
+      },
+      {
+        "text": "message",
+        "on_click": ""
+      }
+    ]
+  },
+  {
+    "text": "tools",
+    "elements": [
+      {
+        "text": "interact",
+        "on_click": "interact_mode"
+      },
+      {
+        "text": "edit",
+        "on_click": "edit_mode"
+      }
+    ]
+  },
+  {
+    "text": "objects",
+    "elements": [
+      {
+        "text": "button info",
+        "on_click": ""
+      },
+      {
+        "text": "field info",
+        "on_click": ""
+      },
+      {
+        "text": "card info",
+        "on_click": ""
+      },
+      {
+        "text": "background info",
+        "on_click": ""
+      },
+      {
+        "text": "stack info",
+        "on_click": ""
+      },
+      {
+        "text": "bring closer",
+        "on_click": ""
+      },
+      {
+        "text": "send farther",
+        "on_click": ""
+      },
+      {
+        "text": "new button",
+        "on_click": "new_button"
+      },
+      {
+        "text": "new field",
+        "on_click": "new_field"
+      },
+      {
+        "text": "new graphic",
+        "on_click": "new_graphic"
+      },
+      {
+        "text": "new background",
+        "on_click": ""
+      }
+    ]
+  },
+  {
+    "text": "font",
+    "elements": [
+      {
+        "text": "Chicago",
+        "on_click": ""
+      }
+    ]
+  },
+  {
+    "text": "style",
+    "elements": [
+      {
+        "text": "bold",
+        "on_click": ""
+      },
+      {
+        "text": "italic",
+        "on_click": ""
       }
     ]
   }

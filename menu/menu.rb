@@ -3,6 +3,7 @@ module Ruby2D
     attr_reader :items
 
     def initialize opts = {}
+      @z = 2000
       @x = 0
       @y = 0
       @width = opts[:width]
@@ -14,8 +15,17 @@ module Ruby2D
         width: @width,
         x: @x,
         y: @y,
-        z: 2000,
+        z: @z,
         only: :bottom
+      )
+
+      @background = Rectangle.new(
+        color: 'white',
+        height: @height - 1,
+        width: @width,
+        x: @x,
+        y: @y,
+        z: @z
       )
 
       self.items

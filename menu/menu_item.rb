@@ -3,6 +3,7 @@ module Ruby2D
     attr_reader :width
 
     def initialize opts = {}
+      @z = 2000
       @x = opts[:x]
       @y = opts[:y]
       @height = 20
@@ -14,8 +15,9 @@ module Ruby2D
         x: @x,
         y: @y,
         width: 0,
-        height: @height,
-        color: 'white'
+        height: @height - 1,
+        color: 'white',
+        z: @z
       )
 
       @text = Text.new(
@@ -25,12 +27,16 @@ module Ruby2D
         color: 'black',
         font: 'fonts/lux.ttf',
         size: 12,
-        z: 2000
+        z: @z
       )
 
       @width = @text.width + 20
       @text.x = @text.x + 10
       @background.width = @width
+    end
+
+    def element_at x, y
+      @elements.find { |e| e.contains? x, y }
     end
 
     def invert
@@ -63,7 +69,7 @@ module Ruby2D
       y = @height - 1 # to overlap borders
 
       elems = elements.map do |e|
-        m = MenuElement.new x: @x, y: y, text: e[:text]
+        m = MenuElement.new x: @x, y: y, text: e[:text], on_click: e[:on_click]
         y += m.height - 1
         m
       end

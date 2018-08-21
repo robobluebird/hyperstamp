@@ -1,5 +1,5 @@
 module Ruby2D
-  class TextBox
+  class Field
     attr_reader :words, :text_color, :color_scheme, :style, :x, :y, :width, :height, :z
     attr_accessor :tag
 
@@ -70,7 +70,7 @@ module Ruby2D
 
     def to_h
       {
-        type: 'text_box',
+        type: 'field',
         tag: @tag,
         text: @words,
         x: @x,

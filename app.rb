@@ -6,7 +6,7 @@ require_relative 'font'
 require_relative 'graphic'
 require_relative 'button'
 require_relative 'mode'
-require_relative 'text_box'
+require_relative 'field'
 require_relative 'border'
 require_relative 'menu/menu'
 require_relative 'menu/menu_item'
@@ -15,7 +15,6 @@ require_relative 'menu/menu_element'
 @z = -1
 @item = nil
 @objects = []
-@controls = []
 @mode = Mode.new
 @filename = 'picker.json'
 @name = nil
@@ -136,7 +135,7 @@ def new_button
   @objects << Button.new(
     z: z,
     x: 0,
-    y: 0,
+    y: 20,
     width: 100,
     height: 50,
     label: 'new button')
@@ -144,11 +143,11 @@ def new_button
   write
 end
 
-def new_text_box
-  @objects << TextBox.new(
+def new_field
+  @objects << Field.new(
     z: z,
     x: 0,
-    y: 0,
+    y: 20,
     width: 100,
     height: 100,
     text: '')
@@ -156,16 +155,12 @@ def new_text_box
   write
 end
 
-def graphic
+def new_graphic
   # need to show a prompt for this one
 end
 
 on :mouse_down do |e|
-  control = false
-
-  if @item = @controls.find { |o| o.contains? e.x, e.y }
-    control = true
-  elsif @item = @menu.items.find { |o| o.contains? e.x, e.y }
+  if @item = @menu.items.find { |o| o.contains? e.x, e.y }
     menu = true
   else
     @item = zord.find { |o| o.contains? e.x, e.y }
@@ -175,18 +170,13 @@ on :mouse_down do |e|
 
   @item.invert if @item.respond_to? :invert
 
-  @mtype = if @mode.edit? && !control && !menu
+  @mtype = if @mode.edit? && !menu
              resizing?(@item, e) ? :resize : :translate
            end
 end
 
 on :mouse_up do |e|
-  if @mode.edit? && !@controls.include?(@item)
-    @focused.defocus if @focused
-    @focused = nil
-  end
-
-  next unless @item 
+  next unless @item
 
   @item.revert if @item && @item.respond_to?(:revert)
 
@@ -194,17 +184,36 @@ on :mouse_up do |e|
     write
     @mtype = nil
   else
-    if @item.respond_to?(:on_click) && @item.on_click
+    if @item.is_a? MenuItem
+      if menu_element = @item.element_at(e.x, e.y)
+        if menu_element.on_click
+          instance_eval menu_element.on_click
+        end
+      end
+    elsif @item.respond_to?(:on_click) && @item.on_click
       instance_eval @item.on_click
     end
   end
 
-  if @mode.edit? && !@controls.include?(@item) && @item.respond_to?(:focus)
+  if @mode.edit? && @item.respond_to?(:focus)
+    @focused.defocus if @focused
     @item.focus
     @focused = @item
   end
 
   @item = nil
+end
+
+def edit_mode
+  @mode.edit
+  @focused = zord.first
+  @focused.focus
+end
+
+def interact_mode
+  @mode.interact
+  @focused.defocus if @focused
+  @focused = nil
 end
 
 on :mouse_move do |e|
@@ -244,39 +253,6 @@ on :key_up do |e|
     write
     next
   end
-
-  if key == :e
-    if @mode.edit?
-      @mode.interact
-      remove_controls
-    else
-      @mode.edit
-      add_controls
-    end
-  end
-end
-
-def remove_controls
-  @controls.each do |c|
-    c.destroy
-  end
-
-  @controls.clear
-end
-
-def add_controls
-  x = get(:width) - 110
-  y = get(:height)
-
-  font = Font.new size: 12
-
-  @controls = [
-    Button.new(font: { type: font.type, size: font.size }, label: 'new button', z: 1000, x: x, y: 10, width: 100, height: 25, on_click: 'new_button'),
-    Button.new(font: { type: font.type, size: font.size }, label: 'new text', z: 1000, x: x, y: 45, width: 100, height: 25, on_click: 'new_text_box'),
-    Button.new(font: { type: font.type, size: font.size }, label: 'new graphic', z: 1000, x: x, y: 80, width: 100, height: 25, on_click: 'new_graphic'),
-    Button.new(font: { type: font.type, size: font.size }, label: 'closer', z: 1000, x: x, y: y - 70, width: 100, height: 25, on_click: 'closer(@focused)'),
-    Button.new(font: { type: font.type, size: font.size }, label: 'farther', z: 1000, x: x, y: y - 35, width: 100, height: 25, on_click: 'farther(@focused)')
-  ]
 end
 
 @menu = Menu.new width: get(:width)

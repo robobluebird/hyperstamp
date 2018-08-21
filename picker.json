@@ -1,18 +1,65 @@
 {
   "name": "picker",
   "created_at": 1534688709,
-  "updated_at": 1534779901,
+  "updated_at": 1534880544,
   "cards": [
     {
-      "type": "text_box",
+      "type": "field",
       "tag": null,
-      "text": "asdfe\n\nNO!",
-      "x": 85,
-      "y": 96,
+      "text": "asdfe\n\nNO!\n\nWay!\n\nBack!",
+      "x": 557,
+      "y": 308,
+      "width": 66,
+      "height": 158,
+      "style": "opaque",
+      "color_scheme": "black_on_white",
+      "font": {
+        "type": "lux",
+        "size": "16"
+      }
+    },
+    {
+      "type": "button",
+      "label": "new button",
+      "tag": null,
+      "x": 172,
+      "y": 202,
+      "height": 50,
+      "width": 100,
+      "style": "opaque",
+      "color_scheme": "black_on_white",
+      "on_click": null,
+      "font": {
+        "type": "lux",
+        "size": "16"
+      }
+    },
+    {
+      "type": "field",
+      "tag": null,
+      "text": "hello\nfriends\nand\nenemies",
+      "x": 69,
+      "y": 311,
       "width": 100,
       "height": 100,
       "style": "opaque",
       "color_scheme": "black_on_white",
+      "font": {
+        "type": "lux",
+        "size": "16"
+      }
+    },
+    {
+      "type": "button",
+      "label": "new button",
+      "tag": null,
+      "x": 381,
+      "y": 104,
+      "height": 50,
+      "width": 100,
+      "style": "opaque",
+      "color_scheme": "black_on_white",
+      "on_click": null,
       "font": {
         "type": "lux",
         "size": "16"

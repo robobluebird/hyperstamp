@@ -9,14 +9,14 @@ module Ruby2D
       @y = opts[:y]
       @height = 20
       @z = 2000
-      @on_click = 'pp @objects'
+      @on_click = opts[:on_click]
 
       @border = Border.new(
         x: @x,
         y: @y,
         width: 0,
         height: @height,
-        z: z
+        z: @z
       )
 
       @background = Rectangle.new(
@@ -25,7 +25,7 @@ module Ruby2D
         width: 0,
         height: @height - 2,
         color: 'white',
-        z: z
+        z: @z
       )
 
       @text = Text.new(
@@ -36,7 +36,7 @@ module Ruby2D
         color: 'black',
         font: 'fonts/lux.ttf',
         size: 12,
-        z: z
+        z: @z
       )
 
       @width = @text.width + 20 + 2 # for border
@@ -51,7 +51,7 @@ module Ruby2D
       @text.x = @text.x + 10
 
       @hover_event = on :mouse_move do |e|
-        if contains? e.x, e.y
+        if @background.contains? e.x, e.y
           @background.color = "black"
           @text.color = "white"
         else
@@ -61,14 +61,15 @@ module Ruby2D
       end
 
       @mouse_up_event = on :mouse_up do |e|
-        if contains? e.x, e.y
-          Application.class_variable_get(:@@window).instance_eval('pp @objects')
+        if @background.contains? e.x, e.y
+          # Application.class_variable_get(:@@window).send(:run)
         end
       end
     end
 
     def contains? x, y
-      (@x..(@x + @width)).cover?(x) && (@y..(@y + @height)).cover?(y)
+      (@background.x..(@background.x + @background.width)).cover?(x) &&
+        (@background.y..(@background.y + @background.height)).cover?(y)
     end
 
     def remove

@@ -44,7 +44,7 @@
       }
     },
     {
-      "type": "text_box",
+      "type": "field",
       "tag": "pep",
       "text": "welcome to\nzach's fun blog!\n\nWISE WORDS\n\nfor ugly F O L K S!",
       "x": 0,
@@ -59,7 +59,7 @@
       }
     },
     {
-      "type": "text_box",
+      "type": "field",
       "tag": null,
       "text": "just ignore\neverything here",
       "x": 439,
