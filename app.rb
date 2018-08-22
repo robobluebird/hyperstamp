@@ -176,6 +176,11 @@ on :mouse_down do |e|
 end
 
 on :mouse_up do |e|
+  @focused.defocus if @focused
+  @highlighted.unhighlight if @highlighted
+  @focused = nil
+  @highlighted = nil
+
   next unless @item
 
   @item.revert if @item && @item.respond_to?(:revert)
@@ -195,8 +200,12 @@ on :mouse_up do |e|
     end
   end
 
-  if @mode.edit? && @item.respond_to?(:focus)
-    @focused.defocus if @focused
+  if @mode.edit? && @item.respond_to?(:highlight)
+    @highlighted.unhighlight if @highlighted
+    @item.highlight
+    @highlighted = @item
+  elsif @mode.interact? && @item.respond_to?(:focus)
+    @focused.defocus if @focus
     @item.focus
     @focused = @item
   end
@@ -206,14 +215,14 @@ end
 
 def edit_mode
   @mode.edit
-  @focused = zord.first
-  @focused.focus
+  @highlighted = zord.first
+  @highlighted.highlight
 end
 
 def interact_mode
   @mode.interact
-  @focused.defocus if @focused
-  @focused = nil
+  @highlighted.unhighlight if @highlighted
+  @highlighted = nil
 end
 
 on :mouse_move do |e|

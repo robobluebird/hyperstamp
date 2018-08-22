@@ -11,18 +11,18 @@
 module Ruby2D
   class Graphic < Image
     def initialize opts = {}
-      @focus = Rectangle.new(
+      @highlight = Rectangle.new(
         z: opts[:z],
         x: (opts[:x] || 0) - 5,
         y: (opts[:y] || 0) - 5,
         color: 'blue')
 
-      @focus.opacity = 0
+      @highlight.opacity = 0
 
       super opts
 
-      @focus.width = self.width + 10
-      @focus.height = self.height + 10
+      @highlight.width = self.width + 10
+      @highlight.height = self.height + 10
 
       @o = if self.width > self.height
              :l
@@ -53,7 +53,7 @@ module Ruby2D
     end
 
     def z= new_z
-      @focus.z = new_z
+      @highlight.z = new_z
       super new_z
     end
 
@@ -61,16 +61,16 @@ module Ruby2D
       self.x = @x + dx
       self.y = @y + dy
 
-      @focus.x = @focus.x + dx
-      @focus.y = @focus.y + dy
+      @highlight.x = @highlight.x + dx
+      @highlight.y = @highlight.y + dy
     end
 
-    def focus
-      @focus.opacity = 1
+    def highlight
+      @highlight.opacity = 1
     end
 
-    def defocus
-      @focus.opacity = 0
+    def dehighlight
+      @highlight.opacity = 0
     end
 
     def editable?
@@ -112,8 +112,8 @@ module Ruby2D
         end
       end
 
-      @focus.width = self.width + 10
-      @focus.height = self.height + 10
+      @highlight.width = self.width + 10
+      @highlight.height = self.height + 10
     end
   end
 end

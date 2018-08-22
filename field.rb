@@ -5,16 +5,16 @@ module Ruby2D
 
     def initialize opts = {}
       @shifted = false
-      @tag = opts[:tag] || opts['tag']
+      @tag = opts[:tag]
       @lines = []
-      @words = opts[:text] || opts['text']
-      @text_color = (opts[:text_color] || opts['text_color'] || :black).to_sym
+      @words = opts[:text]
+      @text_color = (opts[:text_color] || :black).to_sym
 
-      @z      = opts[:z] || opts['z']
-      @x      = opts[:x] || opts['x']
-      @y      = opts[:y] || opts['y']
-      @width  = opts[:width] || opts['width']
-      @height = opts[:height] || opts['height']
+      @z      = opts[:z]
+      @x      = opts[:x]
+      @y      = opts[:y]
+      @width  = opts[:width]
+      @height = opts[:height]
 
       @font = Font.new(
         type: (opts.dig(:font, :type) || :lux).to_sym,
@@ -27,10 +27,10 @@ module Ruby2D
         y1: 0,
         x2: 0,
         y2: @font.height,
-        color: 'black'
+        color: 'blue'
       )
 
-      @focus = Border.new(
+      @highlight = Border.new(
         z: @z,
         thickness: 5,
         x: @x - 5,
@@ -40,7 +40,7 @@ module Ruby2D
         color: 'blue'
       )
 
-      @focus.hide
+      @highlight.hide
 
       @border = Border.new(
         z: @z,
@@ -61,11 +61,12 @@ module Ruby2D
         color: 'white'
       )
 
-      self.style = (opts[:style] || opts['style'] || :opaque).to_sym
-      self.color_scheme = (opts[:color_scheme] || opts['color_scheme'] || :black_on_white).to_sym
-      @cursor.opacity = 0
+      style = (opts[:style] || :opaque).to_sym
+      color_scheme = (opts[:color_scheme] || :black_on_white).to_sym
 
       arrange_text!
+
+      defocus
     end
 
     def to_h
@@ -93,7 +94,7 @@ module Ruby2D
     def z= new_z
       @z = new_z
       @cursor.z = new_z
-      @focus.z = new_z
+      @highlight.z = new_z
       @border.z = new_z
       @content.z = new_z
       @lines.each { |line| line.z = new_z }
@@ -172,7 +173,7 @@ module Ruby2D
       @height = @height + dy
 
       @border.resize dx, dy
-      @focus.resize dx, dy
+      @highlight.resize dx, dy
 
       @content.width = @content.width + dx
       @content.height = @content.height + dy
@@ -185,7 +186,7 @@ module Ruby2D
       @y = @y + dy
 
       @border.translate dx, dy
-      @focus.translate dx, dy
+      @highlight.translate dx, dy
 
       @content.x = @content.x + dx
       @content.y = @content.y + dy
@@ -193,14 +194,20 @@ module Ruby2D
       arrange_text!
     end
 
+    def highlight
+      @highlight.show
+    end
+
+    def unhighlight
+      @highlight.hide
+    end
+
     def focus
-      @cursor.opacity = 1
-      @focus.show
+      @cursor.add
     end
 
     def defocus
-      @cursor.opacity = 0
-      @focus.hide
+      @cursor.remove
     end
 
     private
@@ -262,7 +269,8 @@ module Ruby2D
         start_index = next_linebreak ? end_index + 1 : end_index
       end
 
-      @cursor.z = @z
+      # re-adds it!!
+      # @cursor.z = @z
       @cursor.x1 = @content.x + (@lines.last ? @lines.last.text.length : 0) * @font.width
       @cursor.x2 = @cursor.x1
       @cursor.y1 = @content.y + (num_lines.zero? ? 0 : num_lines - 1) * @font.height

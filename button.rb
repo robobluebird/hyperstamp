@@ -1,67 +1,75 @@
 module Ruby2D
-  class Button < Rectangle
+  class Button
     attr_accessor :tag, :label, :on_click
-    attr_reader :color_scheme, :style
+    attr_reader :color_scheme, :style, :x, :y, :width, :height, :z
 
     def initialize opts = {}
-      @on_click = opts[:on_click] || opts['on_click']
-      @tag = opts[:tag] || opts['tag']
-      @label = opts[:label] || opts['label'] || 'button'
+      @on_click = opts[:on_click]
+      @tag = opts[:tag]
+      @label = opts[:label] || 'button'
 
-      opts[:color] = 'white'
-
-      z      = opts[:z] || opts['z']
-      x      = opts[:x] || opts['x']
-      y      = opts[:y] || opts['y']
-      width  = opts[:width] || opts['width']
-      height = opts[:height] || opts['height']
-
-      @focus = Rectangle.new(
-        z: z,
-        x: x - 5,
-        y: y - 5,
-        width: width + 10,
-        height: height + 10,
-        color: 'blue'
-      )
-
-      @focus.opacity = 0
-
-      @border = Rectangle.new(
-        z: z,
-        x: x - 1,
-        y: y - 1,
-        width: width + 2,
-        height: height + 2,
-        color: 'black'
-      )
-
-      @shadow = Rectangle.new(
-        z: z,
-        x: x + 2,
-        y: y + 2,
-        width: width,
-        height: height,
-        color: 'black'
-      )
-
-      super opts
+      @z      = opts[:z]
+      @x      = opts[:x]
+      @y      = opts[:y]
+      @width  = opts[:width]
+      @height = opts[:height]
 
       @font = Font.new(
         type: (opts.dig(:font, :type) || :lux).to_sym,
         size: opts.dig(:font, :size)
       )
 
+      @highlight = Border.new(
+        z: @z,
+        x: @x - 5,
+        y: @y - 5,
+        width: @width + 10,
+        height: @height + 10,
+        thickness: 5,
+        color: 'blue'
+      )
+
+      @highlight.hide
+
+      @border = Border.new(
+        z: @z,
+        x: @x,
+        y: @y,
+        width: @width,
+        height: @height,
+        thickness: 1,
+        color: 'black'
+      )
+
+      @shadow = Border.new(
+        z: @z,
+        x: @x + 2,
+        y: @y + 2,
+        width: @width,
+        height: @height,
+        thickness: 2,
+        color: 'black'
+      )
+
+      @content = Rectangle.new(
+        z: @z,
+        x: @x + @border.thickness,
+        y: @y + @border.thickness,
+        width: @width - (@border.thickness * 2),
+        height: @height - (@border.thickness * 2),
+        color: 'white'
+      )
+
       @text = Text.new(
-        z: z,
+        z: @z,
         text: @label,
         font: @font.file,
         size: @font.size.to_i,
         color: 'black'
       )
 
-      self.style = (opts[:style] || opts['style'] || :opaque).to_sym
-      self.color_scheme = (opts[:color_scheme] || opts['color_scheme'] || :black_on_white).to_sym
+      self.style = (opts[:style] || :opaque).to_sym
+      self.color_scheme = (opts[:color_scheme] || :black_on_white).to_sym
 
       arrange_text!
     end
@@ -71,10 +79,10 @@ module Ruby2D
         type: 'button',
         label: @label,
         tag: @tag,
-        x: self.x,
-        y: self.y,
-        height: self.height,
-        width: self.width,
+        x: @x,
+        y: @y,
+        height: @height,
+        width: @width,
         style: @style,
         color_scheme: @color_scheme,
         on_click: @on_click,
@@ -85,18 +93,22 @@ module Ruby2D
       }
     end
 
+    def contains? x, y
+      (@x..(@x + @width)).cover?(x) && (@y..(@y + @height)).cover?(y)
+    end
+
     def color_scheme= scheme
       case scheme
       when :black_on_white
         @border.color = 'black'
         @shadow.color = 'black'
         @text.color = 'black'
-        self.color = 'white'
+        @content.color = 'white'
       when :white_on_black
         @border.color = 'white'
         @border.color = 'white'
         @text.color = 'white'
-        self.color = 'black'
+        @content.color = 'black'
       else
         raise
       end
@@ -109,13 +121,13 @@ module Ruby2D
     def style= style
       case style
       when :opaque
-        @border.opacity = 1
-        @shadow.opacity = 1
-        self.opacity = 1
+        @border.show
+        @shadow.show
+        @content.opacity = 1
       when :transparent
-        @border.opacity = 0
-        @shadow.opacity = 0
-        self.opacity = 0
+        @border.hide
+        @shadow.hide
+        @content.opacity = 0
       else
         raise
       end
@@ -124,36 +136,40 @@ module Ruby2D
     end
 
     def z= new_z
-      @focus.z = new_z
+      @highlight.z = new_z
       @border.z = new_z
       @shadow.z = new_z
-      super new_z
+      @content.z = new_z
       @text.z = new_z
     end
 
-    def translate dx, dy
-      self.x = @x + dx
-      self.y = @y + dy
+    def resize dx, dy
+      @width = @width + dx
+      @height = @height + dy
 
-      @focus.x = @focus.x + dx
-      @focus.y = @focus.y + dy
+      @highlight.resize dx, dy
+      @border.resize dx, dy
+      @shadow.resize dx, dy
+
+      @content.width = @content.width + dx
+      @content.height = @content.height + dy
+
+      arrange_text!
+    end
+
+    def translate dx, dy
+      @x = @x + dx
+      @y = @y + dy
+
+      @highlight.translate dx, dy
+      @border.translate dx, dy
+      @shadow.translate dx, dy
+
+      @content.x = @content.x + dx
+      @content.y = @content.y + dy
 
       @text.x = @text.x + dx
       @text.y = @text.y + dy
-
-      @border.x = @border.x + dx
-      @border.y = @border.y + dy
-
-      @shadow.x = @shadow.x + dx
-      @shadow.y = @shadow.y + dy
-    end
-
-    def resize dx, dy
-      self.width = @width + dx
-      self.height = @height + dy
-
-      resize!
-      arrange_text!
     end
 
     def destroy
@@ -164,14 +180,14 @@ module Ruby2D
     end
 
     def invert
-      self.color = 'black'
+      @content.color = 'black'
       @text.color = 'white'
       @border.color = 'white'
       @shadow.color = 'white'
     end
 
     def revert
-      self.color = 'white'
+      @content.color = 'white'
       @text.color = 'black'
       @border.color = 'black'
       @shadow.color = 'black'
@@ -179,12 +195,12 @@ module Ruby2D
       self.color_scheme = @color_scheme
     end
 
-    def focus
-      @focus.opacity = 1
+    def highlight
+      @highlight.show
     end
 
-    def defocus
-      @focus.opacity = 0
+    def unhighlight
+      @highlight.hide
     end
 
     def editable?
@@ -194,17 +210,8 @@ module Ruby2D
     private
 
     def arrange_text!
-      @text.x = self.x + (self.width / 2) - @text.width / 2
-      @text.y = self.y + (self.height / 2) - @text.height / 2
-    end
-
-    def resize!
-      @focus.width = self.width + 10
-      @focus.height = self.height + 10
-      @border.width = self.width + 2
-      @border.height = self.height + 2
-      @shadow.width = self.width
-      @shadow.height = self.height
+      @text.x = @x + (@width / 2) - @text.width / 2
+      @text.y = @y + (@height / 2) - @text.height / 2
     end
   end
 end
