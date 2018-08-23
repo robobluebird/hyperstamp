@@ -1,15 +1,15 @@
 {
   "name": "a test",
   "created_at": 1534095536,
-  "updated_at": 1534613101,
+  "updated_at": 1535025590,
   "cards": [
     {
       "type": "graphic",
       "path": "images/skel.jpg",
-      "x": 138,
-      "y": 273,
-      "width": 220.0,
-      "height": 165.0
+      "x": 9,
+      "y": 219,
+      "width": 318.0,
+      "height": 238.5
     },
     {
       "type": "button",
@@ -51,8 +51,8 @@
       "y": 0,
       "width": 565,
       "height": 299,
-      "style": "opaque",
-      "color_scheme": "black_on_white",
+      "style": null,
+      "color_scheme": null,
       "font": {
         "type": "digital",
         "size": "64"
@@ -66,8 +66,8 @@
       "y": 312,
       "width": 185,
       "height": 56,
-      "style": "opaque",
-      "color_scheme": "black_on_white",
+      "style": null,
+      "color_scheme": null,
       "font": {
         "type": "lux",
         "size": "20"

@@ -16,7 +16,7 @@ require_relative 'menu/menu_element'
 @item = nil
 @objects = []
 @mode = Mode.new
-@filename = 'picker.json'
+@filename = 'test.json'
 @name = nil
 @created_at = nil
 @updated_at = nil

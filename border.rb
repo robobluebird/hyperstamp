@@ -101,6 +101,12 @@ module Ruby2D
       @left.opacity = 0
     end
 
+    def resize_to width, height
+      @width = width
+      @height = height
+      size_up!
+    end
+
     def resize dx, dy
       @width += dx
       @height += dy

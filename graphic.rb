@@ -9,33 +9,52 @@
 # m.write 'images/tape2.png'
 
 module Ruby2D
-  class Graphic < Image
+  class Graphic
+    attr_reader :x, :y, :width, :height, :z, :path
+
     def initialize opts = {}
-      @highlight = Rectangle.new(
-        z: opts[:z],
-        x: (opts[:x] || 0) - 5,
-        y: (opts[:y] || 0) - 5,
+      @x = opts[:x]
+      @y = opts[:y]
+      @width = opts[:width]
+      @height = opts[:height]
+      @z = opts[:z]
+      @path = opts[:path]
+
+      @highlight = Border.new(
+        z: @z,
+        x: @x - 5,
+        y: @y - 5,
+        width: @width + 10,
+        height: @height + 10,
+        thickness: 5,
         color: 'blue')
 
-      @highlight.opacity = 0
+      @highlight.hide
 
-      super opts
+      @image = Image.new(
+        path: @path,
+        x: @x,
+        y: @y,
+        z: @z,
+        width: @width,
+        height: @height
+      )
 
-      @highlight.width = self.width + 10
-      @highlight.height = self.height + 10
+      @highlight.width = @image.width + 10
+      @highlight.height = @image.height + 10
 
-      @o = if self.width > self.height
+      @o = if @width > @height
              :l
-           elsif self.width < self.height
+           elsif @width < @height
              :p
            else
              :s
            end
 
       @r = if landscape?
-             self.height.to_f / self.width
+             @height.to_f / @width
            elsif portrait?
-             self.width.to_f / self.height
+             @width.to_f / @height
            else
              1.0
            end
@@ -45,32 +64,39 @@ module Ruby2D
       {
         type: 'graphic',
         path: @path,
-        x: self.x,
-        y: self.y,
-        width: self.width,
-        height: self.height
+        x: @x,
+        y: @y,
+        width: @width,
+        height: @height
       }
+    end
+
+    def contains? x, y
+      (@image.x..(@image.x + @image.width)).cover?(x) &&
+        (@image.y..(@image.y + @image.height)).cover?(y)
     end
 
     def z= new_z
       @highlight.z = new_z
-      super new_z
+      @image.z = new_z
     end
 
     def translate dx, dy
-      self.x = @x + dx
-      self.y = @y + dy
+      @x = @x + dx
+      @y = @y + dy
 
-      @highlight.x = @highlight.x + dx
-      @highlight.y = @highlight.y + dy
+      @highlight.translate dx, dy
+
+      @image.x = @image.x + dx
+      @image.y = @image.y + dy
     end
 
     def highlight
-      @highlight.opacity = 1
+      @highlight.show
     end
 
-    def dehighlight
-      @highlight.opacity = 0
+    def unhighlight
+      @highlight.hide
     end
 
     def editable?
@@ -91,29 +117,31 @@ module Ruby2D
 
     def resize dx, dy
       if !dx.to_i.zero?
-        self.width = @width + dx
+        @width = @width + dx
 
         if landscape?
-          self.height = self.width * @r
+          @height = @width * @r
         elsif portrait?
-          self.height = self.width / @r
+          @height = @width / @r
         else
-          self.height = self.width
+          @height = @width
         end
       else
-        self.height = @height + dy
+        @height = @height + dy
 
         if landscape?
-          self.width = self.height / @r
+          @width = @height / @r
         elsif portait?
-          self.width = self.height * @r
+          @width = @height * @r
         else
-          self.width = self.height
+          @width = @height
         end
       end
 
-      @highlight.width = self.width + 10
-      @highlight.height = self.height + 10
+      @image.width = @width
+      @image.height = @height
+
+      @highlight.resize_to @width + 10, @height + 10
     end
   end
 end
