@@ -1,7 +1,7 @@
 {
   "name": "picker",
   "created_at": 1534688709,
-  "updated_at": 1534936243,
+  "updated_at": 1534947187,
   "cards": [
     {
       "type": "field",
@@ -37,7 +37,7 @@
     {
       "type": "field",
       "tag": null,
-      "text": "hello\nfriends\nand\nenemies!",
+      "text": "hello\nfriends\nand\nenemies!\n\nWoo!",
       "x": 261,
       "y": 51,
       "width": 199,

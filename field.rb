@@ -4,32 +4,67 @@ module Ruby2D
     attr_accessor :tag
 
     def initialize opts = {}
+      @rendered = false
       @shifted = false
       @tag = opts[:tag]
       @lines = []
-      @words = opts[:text]
+      @words = opts[:text] || ''
       @text_color = (opts[:text_color] || :black).to_sym
+      @style = (opts[:style] || :opaque).to_sym
+      @color_scheme = (opts[:color_scheme] || :black_on_white).to_sym
 
-      @z      = opts[:z]
-      @x      = opts[:x]
-      @y      = opts[:y]
-      @width  = opts[:width]
-      @height = opts[:height]
+      @z      = opts[:z] || 0
+      @x      = opts[:x] || 0
+      @y      = opts[:y] || 0
+      @width  = opts[:width] || 100
+      @height = opts[:height] || 100
 
       @font = Font.new(
         type: (opts.dig(:font, :type) || :lux).to_sym,
         size: opts.dig(:font, :size)
       )
+    end
 
-      @cursor = Line.new(
-        z: @z,
-        x1: 0,
-        y1: 0,
-        x2: 0,
-        y2: @font.height,
-        color: 'blue'
-      )
+    def to_h
+      {
+        type: 'field',
+        tag: @tag,
+        text: @words,
+        x: @x,
+        y: @y,
+        width: @width,
+        height: @height,
+        style: @style,
+        color_scheme: @color_scheme,
+        font: {
+          type: @font.type,
+          size: @font.size.to_s
+        }
+      }
+    end
 
+    def remove
+      clear_text!
+      @highlight.remove
+      @border.remove
+      @content.remove
+      @cursor.remove
+    end
+
+    def add
+      if @rendered
+        @highlight.add
+        @border.add
+        @content.add
+        arrange_text!
+        @cursor.add
+        defocus
+      else
+        render
+      end
+    end
+
+    def render
       @highlight = Border.new(
         z: @z,
         thickness: 5,
@@ -61,34 +96,28 @@ module Ruby2D
         color: 'white'
       )
 
-      style = (opts[:style] || :opaque).to_sym
-      color_scheme = (opts[:color_scheme] || :black_on_white).to_sym
+      @cursor = Line.new(
+        z: @z,
+        x1: 0,
+        y1: 0,
+        x2: 0,
+        y2: @font.height,
+        color: 'blue'
+      )
+
+      style = @style
+      color_scheme = @color_scheme
 
       arrange_text!
 
       defocus
-    end
 
-    def to_h
-      {
-        type: 'field',
-        tag: @tag,
-        text: @words,
-        x: @x,
-        y: @y,
-        width: @width,
-        height: @height,
-        style: @style,
-        color_scheme: @color_scheme,
-        font: {
-          type: @font.type,
-          size: @font.size.to_s
-        }
-      }
+      @rendered = true
     end
 
     def contains? x, y
-      (@x..(@x + @width)).cover?(x) && (@y..(@y + @height)).cover?(y)
+      (@content.x..(@content.x + @content.width)).cover?(x) &&
+        (@content.y..(@content.y + @content.height)).cover?(y)
     end
 
     def z= new_z
@@ -102,21 +131,6 @@ module Ruby2D
 
     def editable?
       true
-    end
-
-    def style= style
-      case style
-      when :opaque
-        @border.show
-        @content.opacity = 1
-      when :transparent
-        @border.hide
-        @content.opacity = 0
-      else
-        raise
-      end
-
-      @style = style
     end
 
     def append str
@@ -137,6 +151,21 @@ module Ruby2D
       end
 
       arrange_text!
+    end
+
+    def style= style
+      case style
+      when :opaque
+        @border.show
+        @content.opacity = 1
+      when :transparent
+        @border.hide
+        @content.opacity = 0
+      else
+        raise
+      end
+
+      @style = style
     end
 
     def color_scheme= scheme
@@ -229,17 +258,18 @@ module Ruby2D
       newline_count = @words.count("\n")
       character_count = @words.length - newline_count
 
-      n = @words.split("\n").reduce(0) do |memo, item|
+      number_of_newlines = @words.split("\n").reduce(0) do |memo, item|
         memo += [(item.length.to_f / chars_across).ceil, 1].max
       end
 
+      # consider multiple newlines at the end of the text
       i = -1
       while @words[i] == "\n"
-        n += 1
+        number_of_newlines += 1
         i -= 1
       end
 
-      num_lines = [n, (@content.height.to_f / @font.height).floor].min
+      num_lines = [number_of_newlines, (@content.height.to_f / @font.height).floor].min
 
       start_index = 0
 
@@ -269,7 +299,7 @@ module Ruby2D
         start_index = next_linebreak ? end_index + 1 : end_index
       end
 
-      # re-adds it!!
+      # re-adds it cursor by setting z
       # @cursor.z = @z
       @cursor.x1 = @content.x + (@lines.last ? @lines.last.text.length : 0) * @font.width
       @cursor.x2 = @cursor.x1

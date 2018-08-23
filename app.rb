@@ -1,6 +1,8 @@
 require 'ruby2d'
+require 'hashdiff'
 require 'mini_magick'
 require 'json'
+require_relative 'label'
 require_relative 'keys'
 require_relative 'font'
 require_relative 'graphic'
@@ -11,6 +13,8 @@ require_relative 'border'
 require_relative 'menu/menu'
 require_relative 'menu/menu_item'
 require_relative 'menu/menu_element'
+require_relative 'stack'
+require_relative 'card'
 
 @z = -1
 @item = nil
@@ -25,21 +29,10 @@ set title: "..."
 set background: 'white'
 
 def write
-  @updated_at = Time.now.to_i
-
-  json = {}
-
-  json[:name] = @name
-  json[:created_at] = @created_at
-  json[:updated_at] = @updated_at
-  json[:cards] = [].tap do |rep|
-    zord.reverse.each do |object|
-      rep << object.to_h
-    end
-  end
+  @card.updated_at = Time.now.to_i
 
   File.open(@filename, 'w') do |f|
-    f.write JSON.pretty_generate json
+    f.write JSON.pretty_generate @stack.to_h
   end
 end
 
@@ -47,16 +40,22 @@ def read
   File.open(@filename) do |f|
     json = JSON.parse(f.read, symbolize_names: true)
 
-    @name = json[:name]
-    set title: @name
+    # @name = json[:name]
+    # set title: @name
+    #
+    # @created_at = json[:created_at]
+    # @updated_at = json[:updated_at]
+    #
+    # @cards = json[:cards].map do |card|
+    #   Card.new car
+    # end
 
-    @created_at = json[:created_at]
-    @updated_at = json[:updated_at]
-
-    json[:cards].each do |card|
-      klazz = Object.const_get card[:type].split('_').map(&:capitalize).join
-      @objects.push klazz.new card.merge(z: z)
-    end
+    # json[:cards].each do |card|
+    #   card.objects do |o|
+    #     klazz = Object.const_get card[:type].split('_').map(&:capitalize).join
+    #     card.objects.push klazz.new card.merge(z: z)
+    #   end
+    # end
   end
 end
 
@@ -266,6 +265,9 @@ end
 
 @menu = Menu.new width: get(:width)
 
-read
+@l = Label.new text: 'hello', x: 200, y: 200, font: {size: 12}, width: 100
+@objects << @l
+
+@l.add
 
 show

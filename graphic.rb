@@ -13,13 +13,43 @@ module Ruby2D
     attr_reader :x, :y, :width, :height, :z, :path
 
     def initialize opts = {}
-      @x = opts[:x]
-      @y = opts[:y]
-      @width = opts[:width]
-      @height = opts[:height]
-      @z = opts[:z]
+      @rendered = false
+      @z = opts[:z] || 0
+      @x = opts[:x] || 0
+      @y = opts[:y] || 0
+      @width = opts[:width] || 0
+      @height = opts[:height] || 0
       @path = opts[:path]
+    end
 
+    def to_h
+      {
+        type: 'graphic',
+        path: @path,
+        x: @x,
+        y: @y,
+        width: @width,
+        height: @height
+      }
+    end
+
+    def remove
+      @highlight.remove
+      @image.remove
+    end
+
+    def add
+      if @rendered
+        @highlight.add
+        @image.add
+
+        proportions!
+      else
+        render
+      end
+    end
+
+    def render
       @highlight = Border.new(
         z: @z,
         x: @x - 5,
@@ -35,40 +65,23 @@ module Ruby2D
         path: @path,
         x: @x,
         y: @y,
-        z: @z,
-        width: @width,
-        height: @height
+        z: @z
       )
 
-      @highlight.width = @image.width + 10
-      @highlight.height = @image.height + 10
+      if @width.zero? # didn't receive a width from opts
+        @width = @image.width
+        @height = @image.height
+      else
+        @image.width = @width
+        @image.height = @height
+      end
 
-      @o = if @width > @height
-             :l
-           elsif @width < @height
-             :p
-           else
-             :s
-           end
+      @highlight.width = @width + 10
+      @highlight.height = @height + 10
 
-      @r = if landscape?
-             @height.to_f / @width
-           elsif portrait?
-             @width.to_f / @height
-           else
-             1.0
-           end
-    end
+      proportions!
 
-    def to_h
-      {
-        type: 'graphic',
-        path: @path,
-        x: @x,
-        y: @y,
-        width: @width,
-        height: @height
-      }
+      @rendered = true
     end
 
     def contains? x, y
@@ -142,6 +155,26 @@ module Ruby2D
       @image.height = @height
 
       @highlight.resize_to @width + 10, @height + 10
+    end
+
+    private
+
+    def proportions!
+      @o = if @width > @height
+             :l
+           elsif @width < @height
+             :p
+           else
+             :s
+           end
+
+      @r = if landscape?
+             @height.to_f / @width
+           elsif portrait?
+             @width.to_f / @height
+           else
+             1.0
+           end
     end
   end
 end

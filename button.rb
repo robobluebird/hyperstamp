@@ -4,74 +4,43 @@ module Ruby2D
     attr_reader :color_scheme, :style, :x, :y, :width, :height, :z
 
     def initialize opts = {}
+      @rendered = false
       @on_click = opts[:on_click]
       @tag = opts[:tag]
       @label = opts[:label] || 'button'
+      @style = (opts[:style] || :opaque).to_sym
+      @color_scheme = (opts[:color_scheme] || :black_on_white).to_sym
 
-      @z      = opts[:z]
-      @x      = opts[:x]
-      @y      = opts[:y]
-      @width  = opts[:width]
-      @height = opts[:height]
+      @z      = opts[:z] || 0
+      @x      = opts[:x] || 0
+      @y      = opts[:y] || 0
+      @width  = opts[:width] || 100
+      @height = opts[:height] || 50
 
       @font = Font.new(
         type: (opts.dig(:font, :type) || :lux).to_sym,
         size: opts.dig(:font, :size)
       )
+    end
 
-      @highlight = Border.new(
-        z: @z,
-        x: @x - 5,
-        y: @y - 5,
-        width: @width + 10,
-        height: @height + 10,
-        thickness: 5,
-        color: 'blue'
-      )
+    def remove
+      @highlight.remove
+      @text.remove
+      @border.remove
+      @shadow.remove
+      @content.remove
+    end
 
-      @highlight.hide
-
-      @border = Border.new(
-        z: @z,
-        x: @x,
-        y: @y,
-        width: @width,
-        height: @height,
-        thickness: 1,
-        color: 'black'
-      )
-
-      @shadow = Border.new(
-        z: @z,
-        x: @x + 2,
-        y: @y + 2,
-        width: @width,
-        height: @height,
-        thickness: 2,
-        color: 'black'
-      )
-
-      @content = Rectangle.new(
-        z: @z,
-        x: @x + @border.thickness,
-        y: @y + @border.thickness,
-        width: @width - (@border.thickness * 2),
-        height: @height - (@border.thickness * 2),
-        color: 'white'
-      )
-
-      @text = Text.new(
-        z: @z,
-        text: @label,
-        font: @font.file,
-        size: @font.size.to_i,
-        color: 'black'
-      )
-
-      self.style = (opts[:style] || :opaque).to_sym
-      self.color_scheme = (opts[:color_scheme] || :black_on_white).to_sym
-
-      arrange_text!
+    def add
+      if @rendered
+        @highlight.add
+        @border.add
+        @shadow.add
+        @content.add
+        @text.add
+      else
+        render!
+      end
     end
 
     def to_h
@@ -94,7 +63,8 @@ module Ruby2D
     end
 
     def contains? x, y
-      (@x..(@x + @width)).cover?(x) && (@y..(@y + @height)).cover?(y)
+      (@content.x..(@content.x + @content.width)).cover?(x) &&
+        (@content.y..(@content.y + @content.height)).cover?(y)
     end
 
     def color_scheme= scheme
@@ -172,13 +142,6 @@ module Ruby2D
       @text.y = @text.y + dy
     end
 
-    def destroy
-      @text.remove
-      @border.remove
-      @shadow.remove
-      self.remove
-    end
-
     def invert
       @content.color = 'black'
       @text.color = 'white'
@@ -208,6 +171,64 @@ module Ruby2D
     end
 
     private
+
+    def render!
+      @highlight = Border.new(
+        z: @z,
+        x: @x - 5,
+        y: @y - 5,
+        width: @width + 10,
+        height: @height + 10,
+        thickness: 5,
+        color: 'blue'
+      )
+
+      @highlight.hide
+
+      @border = Border.new(
+        z: @z,
+        x: @x,
+        y: @y,
+        width: @width,
+        height: @height,
+        thickness: 1,
+        color: 'black'
+      )
+
+      @shadow = Border.new(
+        z: @z,
+        x: @x + 2,
+        y: @y + 2,
+        width: @width,
+        height: @height,
+        thickness: 2,
+        color: 'black'
+      )
+
+      @content = Rectangle.new(
+        z: @z,
+        x: @x + @border.thickness,
+        y: @y + @border.thickness,
+        width: @width - (@border.thickness * 2),
+        height: @height - (@border.thickness * 2),
+        color: 'white'
+      )
+
+      @text = Text.new(
+        z: @z,
+        text: @label,
+        font: @font.file,
+        size: @font.size.to_i,
+        color: 'black'
+      )
+
+      style = @style
+      color_scheme = @color_scheme
+
+      arrange_text!
+
+      @rendered = true
+    end
 
     def arrange_text!
       @text.x = @x + (@width / 2) - @text.width / 2
