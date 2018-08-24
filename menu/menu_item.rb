@@ -3,6 +3,7 @@ module Ruby2D
     attr_reader :width
 
     def initialize opts = {}
+      @listener = opts[:listener]
       @z = 2000
       @x = opts[:x]
       @y = opts[:y]
@@ -69,7 +70,7 @@ module Ruby2D
       y = @height - 1 # to overlap borders
 
       elems = elements.map do |e|
-        m = MenuElement.new x: @x, y: y, text: e[:text], on_click: e[:on_click]
+        m = MenuElement.new listener: @listener, x: @x, y: y, text: e[:text], on_click: e[:on_click]
         y += m.height - 1
         m
       end

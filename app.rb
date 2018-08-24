@@ -2,6 +2,7 @@ require 'ruby2d'
 require 'hashdiff'
 require 'mini_magick'
 require 'json'
+require_relative 'list'
 require_relative 'label'
 require_relative 'keys'
 require_relative 'font'
@@ -167,8 +168,6 @@ on :mouse_down do |e|
 
   next unless @item
 
-  @item.invert if @item.respond_to? :invert
-
   @mtype = if @mode.edit? && !menu
              resizing?(@item, e) ? :resize : :translate
            end
@@ -182,21 +181,9 @@ on :mouse_up do |e|
 
   next unless @item
 
-  @item.revert if @item && @item.respond_to?(:revert)
-
   if @mtype
-    write
+    # write
     @mtype = nil
-  else
-    if @item.is_a? MenuItem
-      if menu_element = @item.element_at(e.x, e.y)
-        if menu_element.on_click
-          instance_eval menu_element.on_click
-        end
-      end
-    elsif @item.respond_to?(:on_click) && @item.on_click
-      instance_eval @item.on_click
-    end
   end
 
   if @mode.edit? && @item.respond_to?(:highlight)
@@ -258,16 +245,25 @@ on :key_up do |e|
 
   if @focused && @focused.editable?
     @focused.append key.to_s
-    write
+
+    # write
+
     next
   end
 end
 
-@menu = Menu.new width: get(:width)
+@menu = Menu.new listener: self, width: get(:width)
 
-@l = Label.new text: 'hello', x: 200, y: 200, font: {size: 12}, width: 100
-@objects << @l
+@list = List.new(
+  x: 100,
+  y: 100,
+  items: %w(one two three four five six seven eight nine ten eleven twelve)
+)
 
-@l.add
+@list.add
+
+@b = Button.new y: 20
+@b.add
+@objects << @b
 
 show

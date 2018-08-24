@@ -5,6 +5,7 @@ module Ruby2D
     def initialize opts = {}
       extend Ruby2D::DSL
 
+      @listener = opts[:listener]
       @x = opts[:x]
       @y = opts[:y]
       @height = 20
@@ -61,8 +62,8 @@ module Ruby2D
       end
 
       @mouse_up_event = on :mouse_up do |e|
-        if @background.contains? e.x, e.y
-          # Application.class_variable_get(:@@window).send(:run)
+        if @background.contains?(e.x, e.y) && @listener && @on_click
+          @listener.instance_eval @on_click
         end
       end
     end

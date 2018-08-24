@@ -4,7 +4,11 @@ module Ruby2D
     attr_reader :color_scheme, :style, :x, :y, :width, :height, :z
 
     def initialize opts = {}
+      extend Ruby2D::DSL
+
+      @pressed = false
       @rendered = false
+      @listener = opts[:listener]
       @on_click = opts[:on_click]
       @tag = opts[:tag]
       @label = opts[:label] || 'button'
@@ -221,6 +225,27 @@ module Ruby2D
         size: @font.size.to_i,
         color: 'black'
       )
+
+      @mouse_down_event = on :mouse_down do |e|
+        if @rendered
+          if @content.contains? e.x, e.y
+            @pressed = true
+            invert
+          end
+        end
+      end
+
+      @mouse_up_event = on :mouse_up do |e|
+        if @pressed
+          @pressed = false
+
+          revert
+
+          if @listener && @on_click
+            @listener.instance_eval @on_click
+          end
+        end
+      end
 
       style = @style
       color_scheme = @color_scheme

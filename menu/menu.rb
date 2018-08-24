@@ -3,6 +3,7 @@ module Ruby2D
     attr_reader :items
 
     def initialize opts = {}
+      @listener = opts[:listener]
       @z = 2000
       @x = 0
       @y = 0
@@ -39,7 +40,7 @@ module Ruby2D
           JSON.parse(f.read, symbolize_names: true).map do |item|
             item.merge(x: @x, y: @y, height: @height, width: @width)
           end.map do |elem_rep|
-            m = MenuItem.new elem_rep.merge(x: x)
+            m = MenuItem.new elem_rep.merge(x: x, listener: @listener)
             x += m.width
             m
           end

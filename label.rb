@@ -15,7 +15,7 @@ module Ruby2D
 
       @font = Font.new(
         type: (opts.dig(:font, :type) || :lux).to_sym,
-        size: opts.dig(:font, :size)
+        size: opts.dig(:font, :size) || 12
       )
 
       @hover_event = on :mouse_move do |e|
@@ -32,14 +32,14 @@ module Ruby2D
     end
 
     def remove
-      @border.remove
+      @highlight.remove
       @content.remove
       @text.remove
     end
 
     def add
       if @rendered
-        @border.add
+        @highlight.add
         @content.add
         @text.add
       else
@@ -56,6 +56,20 @@ module Ruby2D
       @content.width = @content.width + dx
       @content.height = @content.height + dy
 
+      arrange_text!
+    end
+
+    def x= x
+      @x = x
+      @highlight.move_to @x, @y
+      @content.x = @x
+      arrange_text!
+    end
+
+    def y= y
+      @y = y
+      @highlight.move_to @x, @y
+      @content.y = @y
       arrange_text!
     end
 
@@ -118,7 +132,7 @@ module Ruby2D
       )
 
       @width = @text.width if @width.zero?
-      @height = @text.height
+      @height = @text.height if @height.zero?
 
       @highlight.resize_to @width + 10, @height + 10
       @content.width = @width

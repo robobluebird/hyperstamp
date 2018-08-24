@@ -107,6 +107,12 @@ module Ruby2D
       size_up!
     end
 
+    def move_to x, y
+      @x = x
+      @y = y
+      size_up!
+    end
+
     def resize dx, dy
       @width += dx
       @height += dy
