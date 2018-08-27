@@ -32,6 +32,16 @@ module Ruby2D
       self.items
     end
 
+    def activate purpose
+      (purpose == :all ? @items : @items.collect { |item| i.purpose == purpose })
+        .each { |item| i.active = true }
+    end
+
+    def deactivate purpose
+      (purpose == :all ? @items : @items.collect { |item| i.purpose == purpose })
+        .each { |item| i.active = false }
+    end
+
     def items
       @items ||= begin
         x = 20

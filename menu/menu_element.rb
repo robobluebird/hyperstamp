@@ -1,6 +1,6 @@
 module Ruby2D
   class MenuElement
-    attr_reader :x, :y, :width, :height, :on_click
+    attr_reader :x, :y, :width, :height, :action
 
     def initialize opts = {}
       extend Ruby2D::DSL
@@ -10,7 +10,7 @@ module Ruby2D
       @y = opts[:y]
       @height = 20
       @z = 2000
-      @on_click = opts[:on_click]
+      @action = opts[:action]
 
       @border = Border.new(
         x: @x,
@@ -62,8 +62,8 @@ module Ruby2D
       end
 
       @mouse_up_event = on :mouse_up do |e|
-        if @background.contains?(e.x, e.y) && @listener && @on_click
-          @listener.instance_eval @on_click
+        if @background.contains?(e.x, e.y) && @listener && @action
+          @listener.instance_eval @action
         end
       end
     end

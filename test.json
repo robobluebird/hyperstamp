@@ -21,7 +21,7 @@
       "width": 49,
       "style": "opaque",
       "color_scheme": "black_on_white",
-      "on_click": null,
+      "action": null,
       "font": {
         "type": "lux",
         "size": "12"
@@ -37,7 +37,7 @@
       "width": 92,
       "style": "opaque",
       "color_scheme": "black_on_white",
-      "on_click": null,
+      "action": null,
       "font": {
         "type": "ubuntu",
         "size": "16"

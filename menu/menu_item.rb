@@ -1,8 +1,12 @@
 module Ruby2D
   class MenuItem
-    attr_reader :width
+    attr_reader :x, :y, :width, :height, :z, :active
 
     def initialize opts = {}
+      extend Ruby2D::DSL
+
+      @active = true
+      @open = false
       @listener = opts[:listener]
       @z = 2000
       @x = opts[:x]
@@ -34,6 +38,36 @@ module Ruby2D
       @width = @text.width + 20
       @text.x = @text.x + 10
       @background.width = @width
+
+      @mouse_down_event = on :mouse_down do |e|
+        if @active && contains?(e.x, e.y)
+          invert
+          @open = true
+        end
+      end
+
+      @mouse_up_event = on :mouse_up do |e|
+        if @open
+          revert
+          @open = false
+        end
+      end
+    end
+
+    def active= state
+      if state
+        @text.color = 'gray'
+        off(@mouse_down_event)
+      else
+        @text.color = 'black'
+        off(@mouse_down_event)
+      end
+
+      @active = state
+    end
+
+    def active?
+      @active
     end
 
     def element_at x, y
@@ -53,7 +87,8 @@ module Ruby2D
     end
 
     def contains? x, y
-      (@x..(@x + @width)).cover?(x) && (@y..(@y + @height)).cover?(y)
+      (@background.x..(@background.x + @background.width)).cover?(x) &&
+        (@background.y..(@background.y + @background.height)).cover?(y)
     end
 
     def show_elements
@@ -70,8 +105,16 @@ module Ruby2D
       y = @height - 1 # to overlap borders
 
       elems = elements.map do |e|
-        m = MenuElement.new listener: @listener, x: @x, y: y, text: e[:text], on_click: e[:on_click]
+        m = MenuElement.new(
+          listener: @listener,
+          x: @x,
+          y: y,
+          text: e[:text],
+          action: e[:action]
+        )
+
         y += m.height - 1
+
         m
       end
 

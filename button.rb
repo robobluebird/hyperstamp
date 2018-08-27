@@ -1,6 +1,6 @@
 module Ruby2D
   class Button
-    attr_accessor :tag, :label, :on_click
+    attr_accessor :tag, :label, :action
     attr_reader :color_scheme, :style, :x, :y, :width, :height, :z
 
     def initialize opts = {}
@@ -9,7 +9,7 @@ module Ruby2D
       @pressed = false
       @rendered = false
       @listener = opts[:listener]
-      @on_click = opts[:on_click]
+      @action = opts[:action]
       @tag = opts[:tag]
       @label = opts[:label] || 'button'
       @style = (opts[:style] || :opaque).to_sym
@@ -58,7 +58,7 @@ module Ruby2D
         width: @width,
         style: @style,
         color_scheme: @color_scheme,
-        on_click: @on_click,
+        action: @action,
         font: {
           type: @font.type,
           size: @font.size.to_s
@@ -241,8 +241,8 @@ module Ruby2D
 
           revert
 
-          if @listener && @on_click
-            @listener.instance_eval @on_click
+          if @listener && @action
+            @listener.instance_eval @action
           end
         end
       end

@@ -4,27 +4,27 @@
     "elements": [
       {
         "text": "new stack",
-        "on_click": ""
+        "action": ""
       },
       {
         "text": "open stack",
-        "on_click": ""
+        "action": ""
       },
       {
         "text": "save stack",
-        "on_click": ""
+        "action": ""
       },
       {
         "text": "save stack as",
-        "on_click": ""
+        "action": ""
       },
       {
         "text": "print",
-        "on_click": ""
+        "action": ""
       },
       {
         "text": "quit",
-        "on_click": ""
+        "action": ""
       }
     ]
   },
@@ -33,47 +33,47 @@
     "elements": [
       {
         "text": "undo",
-        "on_click": ""
+        "action": ""
       },
       {
         "text": "cut",
-        "on_click": ""
+        "action": ""
       },
       {
         "text": "copy",
-        "on_click": ""
+        "action": ""
       },
       {
         "text": "paste",
-        "on_click": ""
+        "action": ""
       },
       {
         "text": "clear",
-        "on_click": ""
+        "action": ""
       },
       {
         "text": "new card",
-        "on_click": ""
+        "action": ""
       },
       {
         "text": "copy card",
-        "on_click": ""
+        "action": ""
       },
       {
         "text": "paste card",
-        "on_click": ""
+        "action": ""
       },
       {
         "text": "font",
-        "on_click": ""
+        "action": ""
       },
       {
         "text": "background",
-        "on_click": ""
+        "action": ""
       },
       {
         "text": "icon",
-        "on_click": ""
+        "action": ""
       }
     ]
   },
@@ -82,31 +82,31 @@
     "elements": [
       {
         "text": "home",
-        "on_click": ""
+        "action": ""
       },
       {
         "text": "first",
-        "on_click": ""
+        "action": ""
       },
       {
         "text": "prev",
-        "on_click": ""
+        "action": ""
       },
       {
         "text": "next",
-        "on_click": ""
+        "action": ""
       },
       {
         "text": "last",
-        "on_click": ""
+        "action": ""
       },
       {
         "text": "find",
-        "on_click": ""
+        "action": ""
       },
       {
         "text": "message",
-        "on_click": ""
+        "action": ""
       }
     ]
   },
@@ -115,11 +115,11 @@
     "elements": [
       {
         "text": "interact",
-        "on_click": "interact_mode"
+        "action": "interact_mode"
       },
       {
         "text": "edit",
-        "on_click": "edit_mode"
+        "action": "edit_mode"
       }
     ]
   },
@@ -128,47 +128,47 @@
     "elements": [
       {
         "text": "button info",
-        "on_click": ""
+        "action": ""
       },
       {
         "text": "field info",
-        "on_click": ""
+        "action": ""
       },
       {
         "text": "card info",
-        "on_click": ""
+        "action": ""
       },
       {
         "text": "background info",
-        "on_click": ""
+        "action": ""
       },
       {
         "text": "stack info",
-        "on_click": ""
+        "action": ""
       },
       {
         "text": "bring closer",
-        "on_click": ""
+        "action": ""
       },
       {
         "text": "send farther",
-        "on_click": ""
+        "action": ""
       },
       {
         "text": "new button",
-        "on_click": "new_button"
+        "action": "new_button"
       },
       {
         "text": "new field",
-        "on_click": "new_field"
+        "action": "new_field"
       },
       {
         "text": "new graphic",
-        "on_click": "new_graphic"
+        "action": "new_graphic"
       },
       {
         "text": "new background",
-        "on_click": ""
+        "action": ""
       }
     ]
   },
@@ -177,7 +177,7 @@
     "elements": [
       {
         "text": "Chicago",
-        "on_click": ""
+        "action": ""
       }
     ]
   },
@@ -186,11 +186,11 @@
     "elements": [
       {
         "text": "bold",
-        "on_click": ""
+        "action": ""
       },
       {
         "text": "italic",
-        "on_click": ""
+        "action": ""
       }
     ]
   }

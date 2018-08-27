@@ -3,7 +3,10 @@ module Ruby2D
     attr_reader :x, :y, :width, :height, :z, :items
 
     def initialize opts = {}
+      extend Ruby2D::DSL
+
       @rendered = false
+      @mouse_over = false
       @z = opts[:z] || 0
       @x = opts[:x] || 0
       @y = opts[:y] || 0
@@ -19,8 +22,6 @@ module Ruby2D
     def remove
       @border.remove
       @content.remove
-      @up.remove
-      @down.remove
       @rendered_items.each { |ri| ri.remove }
     end
 
@@ -28,8 +29,6 @@ module Ruby2D
       if @rendered
         @border.add
         @content.add
-        @up.add
-        @down.add
       else
         render!
       end
@@ -40,22 +39,25 @@ module Ruby2D
         (@content.y..(@content.y + @content.height)).cover?(y)
     end
 
-    def up
-      if @start_index > 0
-        @start_index -= 1
-        @end_index -= 1
+    def scroll change
+      change = change.to_i
 
-        render_items!
-      end
+      change = if change > 0
+                 [change, @items.length - 1 - @end_index].min
+               elsif change < 0
+                 [change, 0 - @start_index].max
+               else
+                 0
+               end
+
+      @start_index += change
+      @end_index += change
+
+      render_items!
     end
 
-    def down
-      if @end_index < @items.length - 1
-        @start_index += 1
-        @end_index += 1
-
-        render_items!
-      end
+    def choose item
+      pp item
     end
 
     private
@@ -71,6 +73,10 @@ module Ruby2D
         ri.add
         y += @item_height
       end
+    end
+
+    def select item
+      p item
     end
 
     def render!
@@ -90,32 +96,35 @@ module Ruby2D
         height: @height - (@border.thickness * 2)
       )
 
-      @up = Button.new(
-        listener: self,
-        z: @z,
-        x: @x + @width,
-        y: @y,
-        width: 20,
-        height: 20,
-        label: '^',
-        on_click: 'up'
-      )
-
-      @down = Button.new(
-        listener: self,
-        z: @z,
-        x: @x + @width,
-        y: @y + @up.height,
-        width: 20,
-        height: 20,
-        label: 'v',
-        on_click: 'down'
-      )
-
-      @up.add
-      @down.add
-
       layout_items!
+
+      @mouse_move = on :mouse_move do |e|
+        if @rendered
+          if @content.contains? e.x, e.y
+            @mouse_over = true
+            @last_mouse_x = e.x
+            @last_mouse_y = e.y
+          elsif @mouse_over
+            @mouse_over = false
+            @last_mouse_x = nil
+            @last_mouse_y = nil
+          end
+        end
+      end
+
+      @mouse_scroll = on :mouse_scroll do |e|
+        if @rendered && @mouse_over
+          scroll e.delta_y
+
+          @rendered_items.each do |ri|
+            if ri.contains? @last_mouse_x, @last_mouse_y
+              ri.invert
+            else
+              ri.revert
+            end
+          end
+        end
+      end
 
       @rendered = true
     end
@@ -123,8 +132,10 @@ module Ruby2D
     def layout_items!
       y = @content.y
 
-      @items.each do |item|
+      @items.each.with_index do |item|
         item_element = Label.new(
+          listener: self,
+          action: "choose '#{item}'",
           text: item,
           z: @z,
           x: @content.x,

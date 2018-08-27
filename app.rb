@@ -1,5 +1,4 @@
 require 'ruby2d'
-require 'hashdiff'
 require 'mini_magick'
 require 'json'
 require_relative 'list'
@@ -16,6 +15,40 @@ require_relative 'menu/menu_item'
 require_relative 'menu/menu_element'
 require_relative 'stack'
 require_relative 'card'
+
+module Ruby2D
+  class Window
+    def mouse_callback(type, button, direction, x, y, delta_x, delta_y)
+      # All mouse events
+      @events[:mouse].each do |id, e|
+        e.call(MouseEvent.new(type, button, direction, x, y, delta_x, delta_y))
+      end
+
+      case type
+      # When mouse button pressed
+      when :down
+        @events[:mouse_down].each do |id, e|
+          e.call(MouseEvent.new(type, button, nil, x, y, nil, nil))
+        end
+      # When mouse button released
+      when :up
+        @events[:mouse_up].each do |id, e|
+          e.call(MouseEvent.new(type, button, nil, x, y, nil, nil))
+        end
+      # When mouse motion / movement
+      when :scroll
+        @events[:mouse_scroll].each do |id, e|
+          e.call(MouseEvent.new(type, nil, direction, x, y, delta_x, delta_y))
+        end
+      # When mouse scrolling, wheel or trackpad
+      when :move
+        @events[:mouse_move].each do |id, e|
+          e.call(MouseEvent.new(type, nil, nil, x, y, delta_x, delta_y))
+        end
+      end
+    end
+  end
+end
 
 @z = -1
 @item = nil

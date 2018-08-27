@@ -5,30 +5,23 @@ module Ruby2D
     def initialize opts = {}
       extend Ruby2D::DSL
 
+      @hovered = false
+      @click1 = nil
       @rendered = false
+
+      @listener = opts[:listener]
+      @action = opts[:action]
       @z = opts[:z] || 0
       @x = opts[:x] || 0
       @y = opts[:y] || 0
       @width = opts[:width] || 0
       @height = opts[:height] || 0
-      @text = opts[:text] || 'label'
+      @words = opts[:text] || 'label'
 
       @font = Font.new(
         type: (opts.dig(:font, :type) || :lux).to_sym,
         size: opts.dig(:font, :size) || 12
       )
-
-      @hover_event = on :mouse_move do |e|
-        if @rendered
-          if @content.contains? e.x, e.y
-            @content.color = "black"
-            @text.color = "white"
-          else
-            @content.color = "white"
-            @text.color = "black"
-          end
-        end
-      end
     end
 
     def remove
@@ -99,6 +92,18 @@ module Ruby2D
         (@content.y..(@content.y + @content.height)).cover?(y)
     end
 
+    def invert
+      @content.color = "black"
+      @text.color = "white"
+      @hovered = true
+    end
+
+    def revert
+      @content.color = "white"
+      @text.color = "black"
+      @hovered = false
+    end
+
     private
 
     def render!
@@ -125,7 +130,7 @@ module Ruby2D
       @text = Text.new(
         z: @z,
         x: @x,
-        text: @text,
+        text: @words,
         font: @font.file,
         size: @font.size.to_i,
         color: 'black'
@@ -135,10 +140,35 @@ module Ruby2D
       @height = @text.height if @height.zero?
 
       @highlight.resize_to @width + 10, @height + 10
+
       @content.width = @width
       @content.height = @height
 
       arrange_text!
+
+      @hover_event = on :mouse_move do |e|
+        if @rendered
+          if @content.contains?(e.x, e.y)
+            invert
+          elsif @hovered
+            revert
+          end
+        end
+      end
+
+      @click_event = on :mouse_up do |e|
+        if @rendered
+          if @click1 && @content.contains?(e.x, e.y) && Time.now.to_f - @click1 < 0.20
+            if @listener && @action
+              @listener.instance_eval @action
+            end
+
+            @click1 = nil
+          elsif @content.contains? e.x, e.y
+            @click1 = Time.now.to_f
+          end
+        end
+      end
 
       @rendered = true
     end
