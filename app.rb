@@ -1,6 +1,7 @@
 require 'ruby2d'
 require 'mini_magick'
 require 'json'
+require_relative 'file_cabinet'
 require_relative 'list'
 require_relative 'label'
 require_relative 'keys'
@@ -287,16 +288,20 @@ end
 
 @menu = Menu.new listener: self, width: get(:width)
 
-@list = List.new(
-  x: 100,
-  y: 100,
-  items: %w(one two three four five six seven eight nine ten eleven twelve)
-)
+@fc = FileCabinet.new listener: self, background_width: get(:width), background_height: get(:height)
 
-@list.add
+@fc.add
 
-@b = Button.new y: 20
-@b.add
-@objects << @b
+# @list = List.new(
+#   x: 100,
+#   y: 100,
+#   items: %w(one two three four five six seven eight nine ten eleven twelve)
+# )
+#
+# @list.add
+#
+# @b = Button.new y: 20
+# @b.add
+# @objects << @b
 
 show

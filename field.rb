@@ -60,59 +60,8 @@ module Ruby2D
         @cursor.add
         defocus
       else
-        render
+        render!
       end
-    end
-
-    def render
-      @highlight = Border.new(
-        z: @z,
-        thickness: 5,
-        x: @x - 5,
-        y: @y - 5,
-        width: @width + 10,
-        height: @height + 10,
-        color: 'blue'
-      )
-
-      @highlight.hide
-
-      @border = Border.new(
-        z: @z,
-        x: @x,
-        y: @y,
-        width: @width,
-        height: @height,
-        thickness: 1,
-        color: 'black'
-      )
-
-      @content = Rectangle.new(
-        z: @z,
-        x: @x + @border.thickness,
-        y: @y + @border.thickness,
-        width: @width - (@border.thickness * 2),
-        height: @height - (@border.thickness * 2),
-        color: 'white'
-      )
-
-      @cursor = Line.new(
-        z: @z,
-        x1: 0,
-        y1: 0,
-        x2: 0,
-        y2: @font.height,
-        color: 'blue'
-      )
-
-      style = @style
-      color_scheme = @color_scheme
-
-      arrange_text!
-
-      defocus
-
-      @rendered = true
     end
 
     def contains? x, y
@@ -240,6 +189,57 @@ module Ruby2D
     end
 
     private
+
+    def render!
+      @highlight = Border.new(
+        z: @z,
+        thickness: 5,
+        x: @x - 5,
+        y: @y - 5,
+        width: @width + 10,
+        height: @height + 10,
+        color: 'blue'
+      )
+
+      @highlight.hide
+
+      @border = Border.new(
+        z: @z,
+        x: @x,
+        y: @y,
+        width: @width,
+        height: @height,
+        thickness: 1,
+        color: 'black'
+      )
+
+      @content = Rectangle.new(
+        z: @z,
+        x: @x + @border.thickness,
+        y: @y + @border.thickness,
+        width: @width - (@border.thickness * 2),
+        height: @height - (@border.thickness * 2),
+        color: 'white'
+      )
+
+      @cursor = Line.new(
+        z: @z,
+        x1: 0,
+        y1: 0,
+        x2: 0,
+        y2: @font.height,
+        color: 'blue'
+      )
+
+      style = @style
+      color_scheme = @color_scheme
+
+      arrange_text!
+
+      defocus
+
+      @rendered = true
+    end
 
     def clear_text!
       @lines.each do |l|

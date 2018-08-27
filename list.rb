@@ -5,6 +5,7 @@ module Ruby2D
     def initialize opts = {}
       extend Ruby2D::DSL
 
+      @listener = opts[:listener]
       @rendered = false
       @mouse_over = false
       @z = opts[:z] || 0
@@ -57,10 +58,50 @@ module Ruby2D
     end
 
     def choose item
-      pp item
+      if @listener
+        @listener.choose item
+      else
+        p "Chose #{item} but there's nothing to do with it!"
+      end
+    end
+
+    def items= items
+      @items = items
+      @start_index = 0
+      @end_index = [@items.count, ((@height - 2).to_f / @item_height).floor - 1].min
+
+      layout_items!
     end
 
     private
+
+    def layout_items!
+      @rendered_items.each { |ri| ri.remove }
+      @rendered_items.clear
+
+      y = @content.y
+
+      @items.each do |item|
+        item_element = Label.new(
+          listener: self,
+          action: "choose '#{item}'",
+          text: item,
+          z: @z,
+          x: @content.x,
+          y: y,
+          width: @content.width,
+          height: @item_height
+        )
+
+        y += @item_height
+
+        item_element.add
+
+        @rendered_items << item_element
+      end
+
+      render_items!
+    end
 
     def render_items!
       @rendered_items.each { |ri| ri.remove }
@@ -73,10 +114,6 @@ module Ruby2D
         ri.add
         y += @item_height
       end
-    end
-
-    def select item
-      p item
     end
 
     def render!
@@ -127,31 +164,6 @@ module Ruby2D
       end
 
       @rendered = true
-    end
-
-    def layout_items!
-      y = @content.y
-
-      @items.each.with_index do |item|
-        item_element = Label.new(
-          listener: self,
-          action: "choose '#{item}'",
-          text: item,
-          z: @z,
-          x: @content.x,
-          y: y,
-          width: @content.width,
-          height: @item_height
-        )
-
-        y += @item_height
-
-        item_element.add
-
-        @rendered_items << item_element
-      end
-
-      render_items!
     end
   end
 end
