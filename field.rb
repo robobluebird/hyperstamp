@@ -45,6 +45,7 @@ module Ruby2D
 
     def remove
       clear_text!
+
       @highlight.remove
       @border.remove
       @content.remove
@@ -62,6 +63,8 @@ module Ruby2D
       else
         render!
       end
+
+      self
     end
 
     def contains? x, y
@@ -235,7 +238,6 @@ module Ruby2D
       color_scheme = @color_scheme
 
       arrange_text!
-
       defocus
 
       @rendered = true

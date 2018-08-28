@@ -6,6 +6,7 @@ module Ruby2D
     def initialize opts = {}
       extend Ruby2D::DSL
 
+      @events_enabled = false
       @pressed = false
       @rendered = false
       @listener = opts[:listener]
@@ -33,6 +34,15 @@ module Ruby2D
       @border.remove
       @shadow.remove
       @content.remove
+
+      if @events_enabled
+        off @mouse_up_event
+        off @mouse_down_event
+
+        @events_enabled = false
+      end
+
+      true
     end
 
     def add
@@ -42,9 +52,13 @@ module Ruby2D
         @shadow.add
         @content.add
         @text.add
+
+        events!
       else
         render!
       end
+
+      self
     end
 
     def to_h
@@ -226,6 +240,21 @@ module Ruby2D
         color: 'black'
       )
 
+      style = @style
+      color_scheme = @color_scheme
+
+      arrange_text!
+      events!
+
+      @rendered = true
+    end
+
+    def arrange_text!
+      @text.x = @x + (@width / 2) - @text.width / 2
+      @text.y = @y + (@height / 2) - @text.height / 2
+    end
+
+    def events!
       @mouse_down_event = on :mouse_down do |e|
         if @rendered
           if @content.contains? e.x, e.y
@@ -247,17 +276,7 @@ module Ruby2D
         end
       end
 
-      style = @style
-      color_scheme = @color_scheme
-
-      arrange_text!
-
-      @rendered = true
-    end
-
-    def arrange_text!
-      @text.x = @x + (@width / 2) - @text.width / 2
-      @text.y = @y + (@height / 2) - @text.height / 2
+      @events_enabled = true
     end
   end
 end

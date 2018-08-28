@@ -1,7 +1,7 @@
 module Ruby2D
   class FileCabinet
     def initialize opts = {}
-      @path_from_home = ''
+      @path = Dir.pwd
       @rendered = false
       @listener = opts[:listener]
       @background_width = opts[:background_width]
@@ -31,27 +31,15 @@ module Ruby2D
       if item.end_with? '/'
         item = item.split('/').first
 
-        path = @path_from_home.split('/')
+        @path = File.expand_path(File.join(@path, item))
 
-        if item == '..'
-          path.pop
-        else
-          path.push item
-        end
-
-        @path_from_home = if path.empty?
-                            '/'
-                          else
-                            path.join('/')
-                          end
-
-        if Dir.exist? @path_from_home
-          @list.items = entries(File.expand_path(@path_from_home))
+        if Dir.exist? @path
+          @list.items = entries
         else
           raise 'dad dir'
         end
       else
-        pp "is \"#{item}\" usable?"
+        # file magic
       end
     end
 
@@ -85,11 +73,11 @@ module Ruby2D
     end
   end
 
-  def entries start_point = '.'
-    Dir.entries(start_point).reject do |e|
+  def entries
+    Dir.entries(@path).reject do |e|
       ['.', '.DS_Store'].include?(e)
     end.map do |e|
-      Dir.exist?(e) ? "#{e}/" : e
+      Dir.exist?("#{@path}/#{e}") ? "#{e}/" : e
     end
   end
 end

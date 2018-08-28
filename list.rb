@@ -5,6 +5,7 @@ module Ruby2D
     def initialize opts = {}
       extend Ruby2D::DSL
 
+      @events_enabled = false
       @listener = opts[:listener]
       @rendered = false
       @mouse_over = false
@@ -21,15 +22,28 @@ module Ruby2D
     end
 
     def remove
+      raise "Can't remove before being added" unless @rendered
+
       @border.remove
       @content.remove
       @rendered_items.each { |ri| ri.remove }
+
+      if @events_enabled
+        off @hover_event
+        off @scroll_event
+
+        @events_enabled = false
+      end
+
+      true
     end
 
     def add
       if @rendered
         @border.add
         @content.add
+
+        events!
       else
         render!
       end
@@ -74,6 +88,38 @@ module Ruby2D
     end
 
     private
+
+    def events!
+      @hover_event = on :mouse_move do |e|
+        if @rendered
+          if @content.contains? e.x, e.y
+            @mouse_over = true
+            @last_mouse_x = e.x
+            @last_mouse_y = e.y
+          elsif @mouse_over
+            @mouse_over = false
+            @last_mouse_x = nil
+            @last_mouse_y = nil
+          end
+        end
+      end
+
+      @scoll_event = on :mouse_scroll do |e|
+        if @rendered && @mouse_over
+          scroll e.delta_y
+
+          @rendered_items.each do |ri|
+            if ri.contains? @last_mouse_x, @last_mouse_y
+              ri.invert
+            else
+              ri.revert
+            end
+          end
+        end
+      end
+
+      @events_enabled = true
+    end
 
     def layout_items!
       @rendered_items.each { |ri| ri.remove }
@@ -134,34 +180,7 @@ module Ruby2D
       )
 
       layout_items!
-
-      @mouse_move = on :mouse_move do |e|
-        if @rendered
-          if @content.contains? e.x, e.y
-            @mouse_over = true
-            @last_mouse_x = e.x
-            @last_mouse_y = e.y
-          elsif @mouse_over
-            @mouse_over = false
-            @last_mouse_x = nil
-            @last_mouse_y = nil
-          end
-        end
-      end
-
-      @mouse_scroll = on :mouse_scroll do |e|
-        if @rendered && @mouse_over
-          scroll e.delta_y
-
-          @rendered_items.each do |ri|
-            if ri.contains? @last_mouse_x, @last_mouse_y
-              ri.invert
-            else
-              ri.revert
-            end
-          end
-        end
-      end
+      events!
 
       @rendered = true
     end

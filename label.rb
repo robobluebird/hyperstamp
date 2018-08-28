@@ -1,6 +1,6 @@
 module Ruby2D
   class Label
-    attr_reader :x, :y, :z, :width, :height
+    attr_reader :x, :y, :z, :width, :height, :words
 
     def initialize opts = {}
       extend Ruby2D::DSL
@@ -8,6 +8,7 @@ module Ruby2D
       @hovered = false
       @click1 = nil
       @rendered = false
+      @events_enabled = false
 
       @listener = opts[:listener]
       @action = opts[:action]
@@ -25,9 +26,20 @@ module Ruby2D
     end
 
     def remove
+      raise "Can't remove before being added" unless @rendered
+
       @highlight.remove
       @content.remove
       @text.remove
+
+      if @events_enabled
+        off @hover_event
+        off @click_event
+
+        @events_enabled = false
+      end
+
+      true
     end
 
     def add
@@ -35,6 +47,8 @@ module Ruby2D
         @highlight.add
         @content.add
         @text.add
+
+        events!
       else
         render!
       end
@@ -106,6 +120,34 @@ module Ruby2D
 
     private
 
+    def events!
+      @hover_event = on :mouse_move do |e|
+        if @rendered
+          if @content.contains?(e.x, e.y)
+            invert
+          elsif @hovered
+            revert
+          end
+        end
+      end
+
+      @click_event = on :mouse_up do |e|
+        if @rendered
+          if @click1 && @content.contains?(e.x, e.y) && Time.now.to_f - @click1 < 0.20
+            if @listener && @action
+              @listener.instance_eval @action
+            end
+
+            @click1 = nil
+          elsif @content.contains? e.x, e.y
+            @click1 = Time.now.to_f
+          end
+        end
+      end
+
+      @events_enabled = true
+    end
+
     def render!
       @highlight = Border.new(
         z: @z,
@@ -146,29 +188,7 @@ module Ruby2D
 
       arrange_text!
 
-      @hover_event = on :mouse_move do |e|
-        if @rendered
-          if @content.contains?(e.x, e.y)
-            invert
-          elsif @hovered
-            revert
-          end
-        end
-      end
-
-      @click_event = on :mouse_up do |e|
-        if @rendered
-          if @click1 && @content.contains?(e.x, e.y) && Time.now.to_f - @click1 < 0.20
-            if @listener && @action
-              @listener.instance_eval @action
-            end
-
-            @click1 = nil
-          elsif @content.contains? e.x, e.y
-            @click1 = Time.now.to_f
-          end
-        end
-      end
+      events!
 
       @rendered = true
     end
