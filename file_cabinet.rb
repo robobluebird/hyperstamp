@@ -39,7 +39,6 @@ module Ruby2D
           raise 'dad dir'
         end
       else
-        # file magic
       end
     end
 

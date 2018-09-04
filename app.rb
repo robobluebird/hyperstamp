@@ -103,7 +103,7 @@ def reset
   clear
 end
 
-def load_image filename
+def load_graphic filename
   Dir.mkdir 'images' rescue nil
 
   m = MiniMagick::Image.open filename
@@ -194,6 +194,13 @@ def new_graphic
   # launch file cabinet with image intent
   # get file_path back if cool
   # load_image file_path
+
+  @fc = FileCabinet.new(
+    listener: self,
+    background_width: get(:width),
+    background_height: get(:height),
+    action: 'load_graphic'
+  ).add
 end
 
 on :mouse_down do |e|
@@ -291,9 +298,6 @@ end
 
 @menu = Menu.new listener: self, width: get(:width)
 
-# @fc = FileCabinet.new listener: self, background_width: get(:width), background_height: get(:height)
-#
-# @fc.add
 #
 # # @list = List.new(
 # #   x: 100,
