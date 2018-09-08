@@ -104,6 +104,11 @@ def reset
 end
 
 def load_graphic filename
+  p 'whup'
+
+  @menu.activate
+  @fc.remove if @fc
+
   Dir.mkdir 'images' rescue nil
 
   m = MiniMagick::Image.open filename
@@ -114,11 +119,13 @@ def load_graphic filename
   m.scale '50%'
   m.scale '200%'
 
-  path = "images/#{filename}"
+  path = File.expand_path(File.join('images', filename.split('/').last))
+
+  p path
 
   m.write path
 
-  Graphic.new path: path, z: z
+  Graphic.new(path: path, z: z).add
 end
 
 def closer item
@@ -196,11 +203,14 @@ def new_graphic
   # load_image file_path
 
   @fc = FileCabinet.new(
+    intent: :image,
     listener: self,
     background_width: get(:width),
     background_height: get(:height),
     action: 'load_graphic'
   ).add
+
+  @menu.deactivate
 end
 
 on :mouse_down do |e|
@@ -245,6 +255,7 @@ end
 
 def edit_mode
   @mode.edit
+  # obviously we might not have zord lol
   @highlighted = zord.first
   @highlighted.highlight
 end

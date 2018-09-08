@@ -5,62 +5,53 @@ module Ruby2D
     def initialize opts = {}
       extend Ruby2D::DSL
 
+      @events_enabed = false
       @active = true
       @open = false
       @listener = opts[:listener]
       @z = 2000
       @x = opts[:x]
       @y = opts[:y]
+      @words = opts[:text]
       @height = 20
-      @elements = create_elements opts[:elements]
+      @elements_ = opts[:elements] || []
+      @elements = []
+    end
 
-      hide_elements
+    def add
+      if @rendered
+        @background.add
+        @text.add
 
-      @background = Rectangle.new(
-        x: @x,
-        y: @y,
-        width: 0,
-        height: @height - 1,
-        color: 'white',
-        z: @z
-      )
-
-      @text = Text.new(
-        x: @x,
-        y: @y,
-        text: opts[:text],
-        color: 'black',
-        font: 'fonts/lux.ttf',
-        size: 12,
-        z: @z
-      )
-
-      @width = @text.width + 20
-      @text.x = @text.x + 10
-      @background.width = @width
-
-      @mouse_down_event = on :mouse_down do |e|
-        if @active && contains?(e.x, e.y)
-          invert
-          @open = true
-        end
+        events!
+      else
+        render!
       end
 
-      @mouse_up_event = on :mouse_up do |e|
-        if @open
-          revert
-          @open = false
-        end
+      self
+    end
+
+    def remove
+      @background.remove
+      @text.remove
+
+      if @events_enabled
+        off @mouse_down_event
+        off @mouse_up_event
+        @events_enabled = false
       end
+
+      self
     end
 
     def active= state
       if state
-        @text.color = 'gray'
-        off(@mouse_down_event)
-      else
         @text.color = 'black'
-        off(@mouse_down_event)
+        events!
+      else
+        @text.color = 'gray'
+        off @mouse_down_event
+        off @mouse_up_event
       end
 
       @active = state
@@ -100,6 +91,71 @@ module Ruby2D
     end
 
     private
+
+    def render!
+      @background = Rectangle.new(
+        x: @x,
+        y: @y,
+        width: 0,
+        height: @height - 1,
+        color: 'white',
+        z: @z
+      )
+
+      @text = Text.new(
+        x: @x,
+        y: @y,
+        text: @words,
+        color: 'black',
+        font: 'fonts/lux.ttf',
+        size: 12,
+        z: @z
+      )
+
+      @width = @text.width + 20
+      @text.x = @text.x + 10
+      @background.width = @width
+
+      @mouse_down_event = on :mouse_down do |e|
+        if @active && contains?(e.x, e.y)
+          invert
+          @open = true
+        end
+      end
+
+      @mouse_up_event = on :mouse_up do |e|
+        if @open
+          revert
+          @open = false
+        end
+      end
+
+      @elements = create_elements @elements_
+
+      hide_elements
+
+      events!
+
+      @rendered = true
+    end
+
+    def events!
+      @mouse_down_event = on :mouse_down do |e|
+        if @active && contains?(e.x, e.y)
+          invert
+          @open = true
+        end
+      end
+
+      @mouse_up_event = on :mouse_up do |e|
+        if @open
+          revert
+          @open = false
+        end
+      end
+
+      @events_enabled = true
+    end
 
     def create_elements elements
       y = @height - 1 # to overlap borders

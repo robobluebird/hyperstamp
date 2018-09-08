@@ -3,6 +3,8 @@ module Ruby2D
     def initialize opts = {}
       @path = Dir.pwd
       @rendered = false
+      @intent = opts[:intent]
+      @action = opts[:action].to_sym
       @listener = opts[:listener]
       @background_width = opts[:background_width]
       @background_height = opts[:background_height]
@@ -39,6 +41,17 @@ module Ruby2D
           raise 'dad dir'
         end
       else
+        FileMagic.mime { |fm|
+          path = File.expand_path(File.join(@path, item))
+          puts path
+
+          res = fm.file(path).match /^#{Regexp.quote(@intent.to_s)}/
+          puts res
+
+          if @listener && @action
+            @listener.send @action, path
+          end
+        }
       end
     end
 

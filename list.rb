@@ -104,7 +104,7 @@ module Ruby2D
         end
       end
 
-      @scoll_event = on :mouse_scroll do |e|
+      @scroll_event = on :mouse_scroll do |e|
         if @rendered && @mouse_over
           scroll e.delta_y
 

@@ -32,14 +32,14 @@ module Ruby2D
       self.items
     end
 
-    def activate purpose
+    def activate purpose = :all
       (purpose == :all ? @items : @items.collect { |item| i.purpose == purpose })
-        .each { |item| i.active = true }
+        .each { |item| item.active = true }
     end
 
-    def deactivate purpose
+    def deactivate purpose = :all
       (purpose == :all ? @items : @items.collect { |item| i.purpose == purpose })
-        .each { |item| i.active = false }
+        .each { |item| item.active = false }
     end
 
     def items
@@ -50,7 +50,7 @@ module Ruby2D
           JSON.parse(f.read, symbolize_names: true).map do |item|
             item.merge(x: @x, y: @y, height: @height, width: @width)
           end.map do |elem_rep|
-            m = MenuItem.new elem_rep.merge(x: x, listener: @listener)
+            m = MenuItem.new(elem_rep.merge(x: x, listener: @listener)).add
             x += m.width
             m
           end

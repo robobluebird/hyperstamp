@@ -5,6 +5,7 @@ module Ruby2D
     def initialize opts = {}
       extend Ruby2D::DSL
 
+      @events_enabled = false
       @listener = opts[:listener]
       @x = opts[:x]
       @y = opts[:y]
@@ -66,6 +67,8 @@ module Ruby2D
           @listener.instance_eval @action
         end
       end
+
+      @events_enabled = true
     end
 
     def contains? x, y
@@ -77,12 +80,39 @@ module Ruby2D
       @border.remove
       @background.remove
       @text.remove
+
+      if @events_enabled
+        off @hover_event
+        off @mouse_up_event
+
+        @events_enabled = false
+      end
     end
 
     def add
       @border.add
       @background.add
       @text.add
+
+      unless @events_enabled
+        @hover_event = on :mouse_move do |e|
+          if @background.contains? e.x, e.y
+            @background.color = "black"
+            @text.color = "white"
+          else
+            @background.color = "white"
+            @text.color = "black"
+          end
+        end
+
+        @mouse_up_event = on :mouse_up do |e|
+          if @background.contains?(e.x, e.y) && @listener && @action
+            @listener.instance_eval @action
+          end
+        end
+
+        @events_enabled = true
+      end
     end
 
     def width= width

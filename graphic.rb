@@ -36,6 +36,8 @@ module Ruby2D
     def remove
       @highlight.remove
       @image.remove
+
+      self
     end
 
     def add
@@ -45,43 +47,10 @@ module Ruby2D
 
         proportions!
       else
-        render
-      end
-    end
-
-    def render
-      @highlight = Border.new(
-        z: @z,
-        x: @x - 5,
-        y: @y - 5,
-        width: @width + 10,
-        height: @height + 10,
-        thickness: 5,
-        color: 'blue')
-
-      @highlight.hide
-
-      @image = Image.new(
-        path: @path,
-        x: @x,
-        y: @y,
-        z: @z
-      )
-
-      if @width.zero? # didn't receive a width from opts
-        @width = @image.width
-        @height = @image.height
-      else
-        @image.width = @width
-        @image.height = @height
+        render!
       end
 
-      @highlight.width = @width + 10
-      @highlight.height = @height + 10
-
-      proportions!
-
-      @rendered = true
+      self
     end
 
     def contains? x, y
@@ -158,6 +127,41 @@ module Ruby2D
     end
 
     private
+
+    def render!
+      @highlight = Border.new(
+        z: @z,
+        x: @x - 5,
+        y: @y - 5,
+        width: @width + 10,
+        height: @height + 10,
+        thickness: 5,
+        color: 'blue')
+
+      @highlight.hide
+
+      @image = Image.new(
+        path: @path,
+        x: @x,
+        y: @y,
+        z: @z
+      )
+
+      if @width.zero? # didn't receive a width from opts
+        @width = @image.width
+        @height = @image.height
+      else
+        @image.width = @width
+        @image.height = @height
+      end
+
+      @highlight.width = @width + 10
+      @highlight.height = @height + 10
+
+      proportions!
+
+      @rendered = true
+    end
 
     def proportions!
       @o = if @width > @height
