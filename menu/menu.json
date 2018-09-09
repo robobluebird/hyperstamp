@@ -33,7 +33,7 @@
     "elements": [
       {
         "text": "undo",
-        "action": ""
+        "action": "undo"
       },
       {
         "text": "cut",
@@ -120,6 +120,10 @@
       {
         "text": "edit",
         "action": "edit_mode"
+      },
+      {
+        "text": "draw",
+        "action": "draw_mode"
       }
     ]
   },

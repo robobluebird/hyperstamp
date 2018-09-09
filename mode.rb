@@ -19,5 +19,13 @@ module Ruby2D
     def interact?
       @mode == :interact
     end
+
+    def draw
+      @mode = :draw
+    end
+
+    def draw?
+      @mode == :draw
+    end
   end
 end

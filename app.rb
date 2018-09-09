@@ -104,8 +104,6 @@ def reset
 end
 
 def load_graphic filename
-  p 'whup'
-
   @menu.activate
   @fc.remove if @fc
 
@@ -125,7 +123,7 @@ def load_graphic filename
 
   m.write path
 
-  Graphic.new(path: path, z: z).add
+  @objects << Graphic.new(path: path, z: z).add
 end
 
 def closer item
@@ -160,8 +158,18 @@ def farther item
   write
 end
 
+# how do we intercept mouse events and stop them at an element level?
 def z
-  @z += 1
+  if @mode.draw?
+    if @incd
+      @z
+    else
+      @incd = true
+      @z += 1
+    end
+  else
+    @z += 1
+  end
 end
 
 def zord
@@ -213,21 +221,65 @@ def new_graphic
   @menu.deactivate
 end
 
-on :mouse_down do |e|
-  if @item = @menu.items.find { |o| o.contains? e.x, e.y }
-    menu = true
-  else
-    @item = zord.find { |o| o.contains? e.x, e.y }
+@drawings = []
+@drawing = false
+
+def calc i
+  ((i.to_f / 10).floor * 10)
+end
+
+def pixel? x, y
+  @drawings.find do |drawing|
+    drawing.find do |pixel|
+      pixel.x == calc(x) && pixel.y == calc(y)
+    end
   end
+end
 
-  next unless @item
+def pixel x, y
+  { x: calc(x), y: calc(y) }
+end
 
-  @mtype = if @mode.edit? && !menu
-             resizing?(@item, e) ? :resize : :translate
-           end
+def maybe_draw x, y
+  return unless @drawing
+
+  unless pixel? x, y
+    p = pixel x, y
+    p = p.merge size: 10, color: 'black', z: z
+
+    @drawings.last << Square.new(p)
+  end
+end
+
+on :mouse_down do |e|
+  if @mode.draw?
+    @drawings << []
+    @drawing = true
+    maybe_draw e.x, e.y
+  else
+    if @item = @menu.items.find { |o| o.contains? e.x, e.y }
+      menu = true
+    else
+      @item = zord.find { |o| o.contains? e.x, e.y }
+    end
+
+    next unless @item
+
+    @mtype = if @mode.edit? && !menu
+               resizing?(@item, e) ? :resize : :translate
+             end
+  end
 end
 
 on :mouse_up do |e|
+  if @mode.draw?
+    @drawing = false
+    @incd = false
+    pp @drawings.map { |drawing| drawing.count }
+    pp @drawings.map { |drawing| drawing.map(&:z).uniq }
+    next
+  end
+
   @focused.defocus if @focused
   @highlighted.unhighlight if @highlighted
   @focused = nil
@@ -253,11 +305,39 @@ on :mouse_up do |e|
   @item = nil
 end
 
+on :mouse_move do |e|
+  if @mode.draw?
+    maybe_draw e.x, e.y
+  elsif @item && @mtype
+    e.delta_x = 0 if (@item.x + e.delta_x < 0 && @mtype == :translate) || @item.x + @item.width + e.delta_x > get(:width) || @item.x + @item.width + e.delta_x < 0
+    e.delta_y = 0 if (@item.y + e.delta_y < 20 && @mtype == :translate) || @item.y + @item.height + e.delta_y > get(:height) || @item.y + @item.height + e.delta_y < 0
+
+    @item.send @mtype, e.delta_x, e.delta_y
+  end
+end
+
+def undo
+  if @mode.draw?
+    @last = @drawings.pop
+    @last.map(&:remove)
+    @last
+  end
+end
+
+def redo
+  if @last
+    if @last.is_a?(Array) && @last.first.is_a?(Square)
+      @last.map(&:add)
+      @drawings << @last
+      @last = nil
+    end
+  end
+end
+
 def edit_mode
   @mode.edit
-  # obviously we might not have zord lol
   @highlighted = zord.first
-  @highlighted.highlight
+  @highlighted.highlight if @highlighted
 end
 
 def interact_mode
@@ -266,13 +346,10 @@ def interact_mode
   @highlighted = nil
 end
 
-on :mouse_move do |e|
-  if @item && @mtype
-    e.delta_x = 0 if (@item.x + e.delta_x < 0 && @mtype == :translate) || @item.x + @item.width + e.delta_x > get(:width) || @item.x + @item.width + e.delta_x < 0
-    e.delta_y = 0 if (@item.y + e.delta_y < 20 && @mtype == :translate) || @item.y + @item.height + e.delta_y > get(:height) || @item.y + @item.height + e.delta_y < 0
-
-    @item.send @mtype, e.delta_x, e.delta_y
-  end
+def draw_mode
+  @mode.draw
+  @highlighted.unhighlight if @highlighted
+  @highlighted = nil
 end
 
 on :key_down do |e|
