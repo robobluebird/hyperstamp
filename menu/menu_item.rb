@@ -1,11 +1,9 @@
 module Ruby2D
   class MenuItem
-    attr_reader :x, :y, :width, :height, :z, :active
+    attr_reader :x, :y, :width, :height, :z, :active, :elements
 
     def initialize opts = {}
-      extend Ruby2D::DSL
-
-      @events_enabed = false
+      @visible = false
       @active = true
       @open = false
       @listener = opts[:listener]
@@ -18,15 +16,19 @@ module Ruby2D
       @elements = []
     end
 
+    def visible?
+      @visible
+    end
+
     def add
       if @rendered
         @background.add
         @text.add
-
-        events!
       else
         render!
       end
+
+      @visible = true
 
       self
     end
@@ -35,11 +37,7 @@ module Ruby2D
       @background.remove
       @text.remove
 
-      if @events_enabled
-        off @mouse_down_event
-        off @mouse_up_event
-        @events_enabled = false
-      end
+      @visible = false
 
       self
     end
@@ -47,11 +45,8 @@ module Ruby2D
     def active= state
       if state
         @text.color = 'black'
-        events!
       else
         @text.color = 'gray'
-        off @mouse_down_event
-        off @mouse_up_event
       end
 
       @active = state
@@ -90,6 +85,26 @@ module Ruby2D
       @elements.each { |e| e.remove }
     end
 
+    def mouse_down
+      if @active
+        invert
+        @open = true
+      end
+    end
+
+    def mouse_up
+      if @open
+        revert
+        @open = false
+      end
+    end
+
+    def hover_on
+    end
+
+    def hover_off
+    end
+
     private
 
     def render!
@@ -116,45 +131,11 @@ module Ruby2D
       @text.x = @text.x + 10
       @background.width = @width
 
-      @mouse_down_event = on :mouse_down do |e|
-        if @active && contains?(e.x, e.y)
-          invert
-          @open = true
-        end
-      end
-
-      @mouse_up_event = on :mouse_up do |e|
-        if @open
-          revert
-          @open = false
-        end
-      end
-
       @elements = create_elements @elements_
 
       hide_elements
 
-      events!
-
       @rendered = true
-    end
-
-    def events!
-      @mouse_down_event = on :mouse_down do |e|
-        if @active && contains?(e.x, e.y)
-          invert
-          @open = true
-        end
-      end
-
-      @mouse_up_event = on :mouse_up do |e|
-        if @open
-          revert
-          @open = false
-        end
-      end
-
-      @events_enabled = true
     end
 
     def create_elements elements

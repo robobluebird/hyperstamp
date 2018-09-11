@@ -6,7 +6,8 @@ module Ruby2D
     def initialize opts = {}
       extend Ruby2D::DSL
 
-      @events_enabled = false
+      @visible = false
+      @enabled = true
       @pressed = false
       @rendered = false
       @listener = opts[:listener]
@@ -28,21 +29,23 @@ module Ruby2D
       )
     end
 
+    def enabled?
+      @enabled
+    end
+
     def remove
       @highlight.remove
       @text.remove
       @border.remove
       @shadow.remove
       @content.remove
-
-      if @events_enabled
-        off @mouse_up_event
-        off @mouse_down_event
-
-        @events_enabled = false
-      end
+      @visible = false
 
       true
+    end
+
+    def visible?
+      @visible
     end
 
     def add
@@ -52,11 +55,11 @@ module Ruby2D
         @shadow.add
         @content.add
         @text.add
-
-        events!
       else
         render!
       end
+
+      @visible = true
 
       self
     end
@@ -188,6 +191,35 @@ module Ruby2D
       false
     end
 
+    def mouse_down
+      return unless enabled?
+
+      if @rendered
+        @pressed = true
+        invert
+      end
+    end
+
+    def mouse_up
+      return unless enabled?
+
+      if @pressed
+        @pressed = false
+
+        revert
+
+        if @listener && @action
+          @listener.instance_eval @action
+        end
+      end
+    end
+
+    def hover_on
+    end
+
+    def hover_off
+    end
+
     private
 
     def render!
@@ -244,7 +276,6 @@ module Ruby2D
       color_scheme = @color_scheme
 
       arrange_text!
-      events!
 
       @rendered = true
     end
@@ -252,31 +283,6 @@ module Ruby2D
     def arrange_text!
       @text.x = @x + (@width / 2) - @text.width / 2
       @text.y = @y + (@height / 2) - @text.height / 2
-    end
-
-    def events!
-      @mouse_down_event = on :mouse_down do |e|
-        if @rendered
-          if @content.contains? e.x, e.y
-            @pressed = true
-            invert
-          end
-        end
-      end
-
-      @mouse_up_event = on :mouse_up do |e|
-        if @pressed
-          @pressed = false
-
-          revert
-
-          if @listener && @action
-            @listener.instance_eval @action
-          end
-        end
-      end
-
-      @events_enabled = true
     end
   end
 end

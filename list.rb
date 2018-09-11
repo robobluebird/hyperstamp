@@ -5,6 +5,7 @@ module Ruby2D
     def initialize opts = {}
       extend Ruby2D::DSL
 
+      @visible = false
       @events_enabled = false
       @listener = opts[:listener]
       @rendered = false
@@ -21,6 +22,10 @@ module Ruby2D
       @end_index = [@items.count, ((@height - 2).to_f / @item_height).floor - 1].min
     end
 
+    def visible?
+      @visible
+    end
+
     def remove
       raise "Can't remove before being added" unless @rendered
 
@@ -35,7 +40,9 @@ module Ruby2D
         @events_enabled = false
       end
 
-      true
+      @visible = false
+
+      self
     end
 
     def add
@@ -47,6 +54,10 @@ module Ruby2D
       else
         render!
       end
+
+      @visible = true
+
+      self
     end
 
     def contains? x, y

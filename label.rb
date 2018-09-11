@@ -5,10 +5,9 @@ module Ruby2D
     def initialize opts = {}
       extend Ruby2D::DSL
 
-      @hovered = false
-      @click1 = nil
+      @visible = false
+      @first_click = nil
       @rendered = false
-      @events_enabled = false
 
       @listener = opts[:listener]
       @action = opts[:action]
@@ -25,21 +24,18 @@ module Ruby2D
       )
     end
 
-    def remove
-      raise "Can't remove before being added" unless @rendered
+    def visible?
+      @visible
+    end
 
+    def remove
       @highlight.remove
       @content.remove
       @text.remove
 
-      if @events_enabled
-        off @hover_event
-        off @click_event
+      @visible = false
 
-        @events_enabled = false
-      end
-
-      true
+      self
     end
 
     def add
@@ -47,11 +43,13 @@ module Ruby2D
         @highlight.add
         @content.add
         @text.add
-
-        events!
       else
         render!
       end
+
+      @visible = true
+
+      self
     end
 
     def resize dx, dy
@@ -109,44 +107,34 @@ module Ruby2D
     def invert
       @content.color = "black"
       @text.color = "white"
-      @hovered = true
     end
 
     def revert
       @content.color = "white"
       @text.color = "black"
-      @hovered = false
+    end
+
+    def hover_on
+      invert
+    end
+
+    def hover_off
+      revert
+    end
+
+    def mouse_up
+      if @first_click && Time.now.to_f - @first_click < 0.20
+        if @listener && @action
+          @listener.instance_eval @action
+        end
+
+        @first_click = nil
+      elsif @content.contains? e.x, e.y
+        @first_click = Time.now.to_f
+      end
     end
 
     private
-
-    def events!
-      @hover_event = on :mouse_move do |e|
-        if @rendered
-          if @content.contains?(e.x, e.y)
-            invert
-          elsif @hovered
-            revert
-          end
-        end
-      end
-
-      @click_event = on :mouse_up do |e|
-        if @rendered
-          if @click1 && @content.contains?(e.x, e.y) && Time.now.to_f - @click1 < 0.20
-            if @listener && @action
-              @listener.instance_eval @action
-            end
-
-            @click1 = nil
-          elsif @content.contains? e.x, e.y
-            @click1 = Time.now.to_f
-          end
-        end
-      end
-
-      @events_enabled = true
-    end
 
     def render!
       @highlight = Border.new(
@@ -187,8 +175,6 @@ module Ruby2D
       @content.height = @height
 
       arrange_text!
-
-      events!
 
       @rendered = true
     end

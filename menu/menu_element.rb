@@ -1,11 +1,9 @@
 module Ruby2D
   class MenuElement
-    attr_reader :x, :y, :width, :height, :action
+    attr_reader :x, :y, :z, :width, :height, :action
 
     def initialize opts = {}
-      extend Ruby2D::DSL
-
-      @events_enabled = false
+      @visible = false
       @listener = opts[:listener]
       @x = opts[:x]
       @y = opts[:y]
@@ -51,24 +49,22 @@ module Ruby2D
       @background.height = @height - 2
 
       @text.x = @text.x + 10
+    end
 
-      @hover_event = on :mouse_move do |e|
-        if @background.contains? e.x, e.y
-          @background.color = "black"
-          @text.color = "white"
-        else
-          @background.color = "white"
-          @text.color = "black"
-        end
+    def hover_on
+      @background.color = "black"
+      @text.color = "white"
+    end
+
+    def hover_off
+      @background.color = "white"
+      @text.color = "black"
+    end
+
+    def mouse_up
+      if @listener && @action
+        @listener.instance_eval @action
       end
-
-      @mouse_up_event = on :mouse_up do |e|
-        if @background.contains?(e.x, e.y) && @listener && @action
-          @listener.instance_eval @action
-        end
-      end
-
-      @events_enabled = true
     end
 
     def contains? x, y
@@ -76,17 +72,18 @@ module Ruby2D
         (@background.y..(@background.y + @background.height)).cover?(y)
     end
 
+    def visible?
+      @visible
+    end
+
     def remove
       @border.remove
       @background.remove
       @text.remove
 
-      if @events_enabled
-        off @hover_event
-        off @mouse_up_event
+      @visible = false
 
-        @events_enabled = false
-      end
+      self
     end
 
     def add
@@ -94,25 +91,9 @@ module Ruby2D
       @background.add
       @text.add
 
-      unless @events_enabled
-        @hover_event = on :mouse_move do |e|
-          if @background.contains? e.x, e.y
-            @background.color = "black"
-            @text.color = "white"
-          else
-            @background.color = "white"
-            @text.color = "black"
-          end
-        end
+      @visible = true
 
-        @mouse_up_event = on :mouse_up do |e|
-          if @background.contains?(e.x, e.y) && @listener && @action
-            @listener.instance_eval @action
-          end
-        end
-
-        @events_enabled = true
-      end
+      self
     end
 
     def width= width

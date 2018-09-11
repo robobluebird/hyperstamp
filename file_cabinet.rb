@@ -1,6 +1,7 @@
 module Ruby2D
   class FileCabinet
     def initialize opts = {}
+      @visible = false
       @path = Dir.pwd
       @rendered = false
       @intent = opts[:intent]
@@ -11,9 +12,15 @@ module Ruby2D
       @z = 4000
     end
 
+    def visible?
+      @visible
+    end
+
     def remove
       @background.remove
       @list.remove
+
+      @visible = false
 
       self
     end
@@ -25,6 +32,8 @@ module Ruby2D
       else
         render!
       end
+
+      @visible = true
 
       self
     end
@@ -38,7 +47,7 @@ module Ruby2D
         if Dir.exist? @path
           @list.items = entries
         else
-          raise 'dad dir'
+          raise 'dir'
         end
       else
         FileMagic.mime { |fm|

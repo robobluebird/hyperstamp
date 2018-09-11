@@ -4,6 +4,7 @@ module Ruby2D
     attr_accessor :tag
 
     def initialize opts = {}
+      @visible = false
       @rendered = false
       @shifted = false
       @tag = opts[:tag]
@@ -43,6 +44,10 @@ module Ruby2D
       }
     end
 
+    def visible?
+      @visible
+    end
+
     def remove
       clear_text!
 
@@ -50,6 +55,10 @@ module Ruby2D
       @border.remove
       @content.remove
       @cursor.remove
+
+      @visible = false
+
+      self
     end
 
     def add
@@ -63,6 +72,8 @@ module Ruby2D
       else
         render!
       end
+
+      @visible = true
 
       self
     end

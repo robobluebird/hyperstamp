@@ -13,6 +13,7 @@ module Ruby2D
     attr_reader :x, :y, :width, :height, :z, :path
 
     def initialize opts = {}
+      @visible = false
       @rendered = false
       @z = opts[:z] || 0
       @x = opts[:x] || 0
@@ -33,9 +34,15 @@ module Ruby2D
       }
     end
 
+    def visible?
+      @visible
+    end
+
     def remove
       @highlight.remove
       @image.remove
+
+      @visible = false
 
       self
     end
@@ -49,6 +56,8 @@ module Ruby2D
       else
         render!
       end
+
+      @visible = true
 
       self
     end

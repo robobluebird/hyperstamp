@@ -161,10 +161,10 @@ end
 # how do we intercept mouse events and stop them at an element level?
 def z
   if @mode.draw?
-    if @incd
+    if @inc_z
       @z
     else
-      @incd = true
+      @inc_z = true
       @z += 1
     end
   else
@@ -251,39 +251,58 @@ def maybe_draw x, y
   end
 end
 
+def menu? item
+  item.is_a?(MenuItem) || item.is_a?(MenuElement)
+end
+
+@menu_mousing = false
+
 on :mouse_down do |e|
-  if @mode.draw?
+  @item = zord.find { |o| o.visible? && o.contains?(e.x, e.y) }
+
+  if menu? @item
+    @menu_mousing = true
+    @item.mouse_down
+  elsif @mode.draw?
     @drawings << []
     @drawing = true
     maybe_draw e.x, e.y
   else
-    if @item = @menu.items.find { |o| o.contains? e.x, e.y }
-      menu = true
-    else
-      @item = zord.find { |o| o.contains? e.x, e.y }
-    end
-
     next unless @item
 
-    @mtype = if @mode.edit? && !menu
-               resizing?(@item, e) ? :resize : :translate
+    @mtype = if @mode.interact?
+               @item.mouse_down
+
+               nil
+             else
+               if resizing? @item, e
+                 :resize
+               else
+                 :translate
+               end
              end
   end
 end
 
 on :mouse_up do |e|
-  if @mode.draw?
-    @drawing = false
-    @incd = false
-    pp @drawings.map { |drawing| drawing.count }
-    pp @drawings.map { |drawing| drawing.map(&:z).uniq }
-    next
-  end
-
   @focused.defocus if @focused
   @highlighted.unhighlight if @highlighted
   @focused = nil
   @highlighted = nil
+
+  if @menu_mousing
+    menu_element = zord.find { |o| o.contains?(e.x, e.y) && o.is_a?(MenuElement) }
+    menu_element.mouse_up if menu_element
+    @item.mouse_up
+    @menu_mousing = false
+    next
+  end
+
+  if @mode.draw?
+    @drawing = false
+    @inc_z = false
+    next
+  end
 
   next unless @item
 
@@ -296,23 +315,43 @@ on :mouse_up do |e|
     @highlighted.unhighlight if @highlighted
     @item.highlight
     @highlighted = @item
-  elsif @mode.interact? && @item.respond_to?(:focus)
-    @focused.defocus if @focus
-    @item.focus
-    @focused = @item
+  elsif @mode.interact?
+    if @item.respond_to? :mouse_up
+      @item.mouse_up
+    elsif @item.respond_to? :focus
+      @focused.defocus if @focus
+      @item.focus
+      @focused = @item
+    end
   end
 
   @item = nil
 end
 
 on :mouse_move do |e|
-  if @mode.draw?
+  if @item && @menu_mousing
+    @objects.each do |o|
+      if o.contains? e.x, e.y
+        o.hover_on
+      else
+        o.hover_off
+      end
+    end
+  elsif @mode.draw?
     maybe_draw e.x, e.y
   elsif @item && @mtype
     e.delta_x = 0 if (@item.x + e.delta_x < 0 && @mtype == :translate) || @item.x + @item.width + e.delta_x > get(:width) || @item.x + @item.width + e.delta_x < 0
     e.delta_y = 0 if (@item.y + e.delta_y < 20 && @mtype == :translate) || @item.y + @item.height + e.delta_y > get(:height) || @item.y + @item.height + e.delta_y < 0
 
     @item.send @mtype, e.delta_x, e.delta_y
+  else
+    @objects.each do |o|
+      if o.contains? e.x, e.y
+        o.hover_on
+      else
+        o.hover_off
+      end
+    end
   end
 end
 
@@ -336,8 +375,17 @@ end
 
 def edit_mode
   @mode.edit
-  @highlighted = zord.first
-  @highlighted.highlight if @highlighted
+  # @highlighted = zord.first
+  # @highlighted.highlight if @highlighted
+  #
+  # case type
+  # when :all
+  #   @objects
+  # when :menu
+  #   @objects.select { |o| [MenuItem, MenuElement].include? o.class }
+  # when :objects
+  #   @objects.select { |o| [Button, Field, Graphic, Drawing].include? o.class }
+  # end.sort { |a,b| b.z <=> a.z }
 end
 
 def interact_mode
@@ -348,6 +396,7 @@ end
 
 def draw_mode
   @mode.draw
+  @objects.each { |o| o.hover_off }
   @highlighted.unhighlight if @highlighted
   @highlighted = nil
 end
@@ -385,6 +434,17 @@ on :key_up do |e|
 end
 
 @menu = Menu.new listener: self, width: get(:width)
+
+@menu.items.each do |mi|
+  @objects << mi
+
+  mi.elements.each do |me|
+    @objects << me
+  end
+end
+
+@objects << Button.new(listener: self, z: z, y: 20, label: 'button1', action: 'puts "b1"').add
+@objects << Button.new(listener: self, z: z, y: 30, label: 'button2', action: 'puts "b2"').add
 
 #
 # # @list = List.new(
