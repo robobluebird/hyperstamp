@@ -114,15 +114,15 @@ module Ruby2D
       @text.color = "black"
     end
 
-    def hover_on
+    def hover_on x, y
       invert
     end
 
-    def hover_off
+    def hover_off x, y
       revert
     end
 
-    def mouse_up
+    def mouse_up x, y
       if @first_click && Time.now.to_f - @first_click < 0.20
         if @listener && @action
           @listener.instance_eval @action

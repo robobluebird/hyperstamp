@@ -135,6 +135,18 @@ module Ruby2D
       @highlight.resize_to @width + 10, @height + 10
     end
 
+    def hover_on x, y
+    end
+
+    def hover_off x, y
+    end
+
+    def mouse_up x, y
+    end
+
+    def mouse_down x, y
+    end
+
     private
 
     def render!

@@ -124,6 +124,10 @@
       {
         "text": "draw",
         "action": "draw_mode"
+      },
+      {
+        "text": "icon",
+        "action": "sketch_pad"
       }
     ]
   },

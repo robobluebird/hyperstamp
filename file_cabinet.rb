@@ -1,5 +1,7 @@
 module Ruby2D
   class FileCabinet
+    attr_reader :z
+
     def initialize opts = {}
       @visible = false
       @path = Dir.pwd
@@ -9,6 +11,10 @@ module Ruby2D
       @listener = opts[:listener]
       @background_width = opts[:background_width]
       @background_height = opts[:background_height]
+      @x = 0
+      @y = 0
+      @width = @background_width
+      @height = @background_height
       @z = 4000
     end
 
@@ -62,6 +68,29 @@ module Ruby2D
           end
         }
       end
+    end
+
+    def translate x, y
+    end
+
+    def resize x, y
+    end
+
+    def contains? x, y
+      (@x..(@x + @width)).cover?(x) &&
+        (@y..(@y + @height)).cover?(y)
+    end
+
+    def hover_on x, y
+    end
+
+    def hover_off x, y
+    end
+
+    def mouse_down x, y
+    end
+
+    def mouse_up x, y
     end
 
     private

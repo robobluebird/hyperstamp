@@ -32,6 +32,10 @@ module Ruby2D
       self.items
     end
 
+    def objectify
+      items.reduce([]) { |memo, item| memo += [item, *(item.elements)] }
+    end
+
     def activate purpose = :all
       (purpose == :all ? @items : @items.collect { |item| i.purpose == purpose })
         .each { |item| item.active = true }

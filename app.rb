@@ -2,6 +2,7 @@ require 'ruby2d'
 require 'mini_magick'
 require 'json'
 require 'filemagic'
+require_relative 'sketch_pad'
 require_relative 'file_cabinet'
 require_relative 'list'
 require_relative 'label'
@@ -173,6 +174,8 @@ def z
 end
 
 def zord
+  # sort by something else besides z so that buttons are always
+  # on top or something?
   @objects.sort { |a,b| b.z <=> a.z }
 end
 
@@ -210,13 +213,15 @@ def new_graphic
   # get file_path back if cool
   # load_image file_path
 
-  @fc = FileCabinet.new(
+  @fc ||= FileCabinet.new(
     intent: :image,
     listener: self,
     background_width: get(:width),
     background_height: get(:height),
     action: 'load_graphic'
   ).add
+
+  @objects += @fc.objectify
 
   @menu.deactivate
 end
@@ -262,7 +267,7 @@ on :mouse_down do |e|
 
   if menu? @item
     @menu_mousing = true
-    @item.mouse_down
+    @item.mouse_down e.x, e.y
   elsif @mode.draw?
     @drawings << []
     @drawing = true
@@ -271,7 +276,7 @@ on :mouse_down do |e|
     next unless @item
 
     @mtype = if @mode.interact?
-               @item.mouse_down
+               @item.mouse_down e.x, e.y
 
                nil
              else
@@ -292,8 +297,8 @@ on :mouse_up do |e|
 
   if @menu_mousing
     menu_element = zord.find { |o| o.contains?(e.x, e.y) && o.is_a?(MenuElement) }
-    menu_element.mouse_up if menu_element
-    @item.mouse_up
+    menu_element.mouse_up(e.x, e.y) if menu_element
+    @item.mouse_up e.x, e.y
     @menu_mousing = false
     next
   end
@@ -317,7 +322,7 @@ on :mouse_up do |e|
     @highlighted = @item
   elsif @mode.interact?
     if @item.respond_to? :mouse_up
-      @item.mouse_up
+      @item.mouse_up e.x, e.y
     elsif @item.respond_to? :focus
       @focused.defocus if @focus
       @item.focus
@@ -332,9 +337,9 @@ on :mouse_move do |e|
   if @item && @menu_mousing
     @objects.each do |o|
       if o.contains? e.x, e.y
-        o.hover_on
+        o.hover_on e.x, e.y
       else
-        o.hover_off
+        o.hover_off e.x, e.y
       end
     end
   elsif @mode.draw?
@@ -347,9 +352,9 @@ on :mouse_move do |e|
   else
     @objects.each do |o|
       if o.contains? e.x, e.y
-        o.hover_on
+        o.hover_on e.x, e.y
       else
-        o.hover_off
+        o.hover_off e.x, e.y
       end
     end
   end
@@ -396,9 +401,34 @@ end
 
 def draw_mode
   @mode.draw
-  @objects.each { |o| o.hover_off }
+  @objects.each { |o| o.hover_off nil, nil }
   @highlighted.unhighlight if @highlighted
   @highlighted = nil
+end
+
+def sketch_pad
+  @sp ||= SketchPad.new(
+    background_height: get(:height),
+    background_width: get(:width),
+    listener: self,
+    action: ''
+  ).add
+
+  @sp.add
+
+  @objects += @sp.objectify
+end
+
+def save_sketch
+  # do stuff
+
+  remove_sketch_pad
+end
+
+def remove_sketch_pad
+  @sp.remove
+
+  @objects.count - @objects.reject! { |o| @sp.objectify.include? o }.count
 end
 
 on :key_down do |e|
@@ -435,28 +465,6 @@ end
 
 @menu = Menu.new listener: self, width: get(:width)
 
-@menu.items.each do |mi|
-  @objects << mi
-
-  mi.elements.each do |me|
-    @objects << me
-  end
-end
-
-@objects << Button.new(listener: self, z: z, y: 20, label: 'button1', action: 'puts "b1"').add
-@objects << Button.new(listener: self, z: z, y: 30, label: 'button2', action: 'puts "b2"').add
-
-#
-# # @list = List.new(
-# #   x: 100,
-# #   y: 100,
-# #   items: %w(one two three four five six seven eight nine ten eleven twelve)
-# # )
-# #
-# # @list.add
-# #
-# # @b = Button.new y: 20
-# # @b.add
-# # @objects << @b
+@objects += @menu.objectify
 
 show

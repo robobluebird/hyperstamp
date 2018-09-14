@@ -51,17 +51,17 @@ module Ruby2D
       @text.x = @text.x + 10
     end
 
-    def hover_on
+    def hover_on x, y
       @background.color = "black"
       @text.color = "white"
     end
 
-    def hover_off
+    def hover_off x, y
       @background.color = "white"
       @text.color = "black"
     end
 
-    def mouse_up
+    def mouse_up x, y
       if @listener && @action
         @listener.instance_eval @action
       end

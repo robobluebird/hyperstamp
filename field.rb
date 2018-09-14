@@ -202,6 +202,18 @@ module Ruby2D
       @cursor.remove
     end
 
+    def hover_on x, y
+    end
+
+    def hover_off x, y
+    end
+
+    def mouse_up x, y
+    end
+
+    def mouse_down x, y
+    end
+
     private
 
     def render!

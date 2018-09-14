@@ -85,24 +85,24 @@ module Ruby2D
       @elements.each { |e| e.remove }
     end
 
-    def mouse_down
+    def mouse_down x, y
       if @active
         invert
         @open = true
       end
     end
 
-    def mouse_up
+    def mouse_up x, y
       if @open
         revert
         @open = false
       end
     end
 
-    def hover_on
+    def hover_on x, y
     end
 
-    def hover_off
+    def hover_off x, y
     end
 
     private

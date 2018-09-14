@@ -191,7 +191,7 @@ module Ruby2D
       false
     end
 
-    def mouse_down
+    def mouse_down x, y
       return unless enabled?
 
       if @rendered
@@ -200,7 +200,7 @@ module Ruby2D
       end
     end
 
-    def mouse_up
+    def mouse_up x, y
       return unless enabled?
 
       if @pressed
@@ -214,10 +214,10 @@ module Ruby2D
       end
     end
 
-    def hover_on
+    def hover_on x, y
     end
 
-    def hover_off
+    def hover_off x, y
     end
 
     private
