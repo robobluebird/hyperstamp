@@ -22,6 +22,13 @@ module Ruby2D
       @z = 4000
     end
 
+    def export
+      # convert -size 256x256 xc:white \
+      # -draw "fill gray stroke black rectangle 8,8 16,16 \
+      # stroke gray rectangle 16,16 24,24 rectangle 24,24 32,32" \
+      # draw1.png
+    end
+
     def objectify
       [cancel_button, save_button, self]
     end
