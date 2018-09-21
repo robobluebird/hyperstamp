@@ -85,14 +85,14 @@ module Ruby2D
       @elements.each { |e| e.remove }
     end
 
-    def mouse_down x, y
+    def mouse_down x, y, button
       if @active
         invert
         @open = true
       end
     end
 
-    def mouse_up x, y
+    def mouse_up x, y, button
       if @open
         revert
         @open = false

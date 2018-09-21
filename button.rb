@@ -64,6 +64,12 @@ module Ruby2D
       self
     end
 
+    def label= new_label
+      @text.text = new_label
+
+      arrange_text!
+    end
+
     def to_h
       {
         type: 'button',
@@ -191,7 +197,11 @@ module Ruby2D
       false
     end
 
-    def mouse_down x, y
+    def configurable?
+      true
+    end
+
+    def mouse_down x, y, button
       return unless enabled?
 
       if @rendered
@@ -200,7 +210,18 @@ module Ruby2D
       end
     end
 
-    def mouse_up x, y
+    def mouse_up x, y, button
+      # if @first_click && Time.now.to_f - @first_click < 0.20
+      #   if @listener && @action
+      #     @listener.instance_eval @action
+      #   end
+      #
+      #   @first_click = nil
+      # elsif @content.contains? e.x, e.y
+      #Time.now.to_f - @first_click < 0.20
+      #   @first_click = Time.now.to_f
+      # end
+      #
       return unless enabled?
 
       if @pressed

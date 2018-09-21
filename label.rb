@@ -1,6 +1,7 @@
 module Ruby2D
   class Label
     attr_reader :x, :y, :z, :width, :height, :words
+    attr_accessor :tag
 
     def initialize opts = {}
       extend Ruby2D::DSL
@@ -17,6 +18,7 @@ module Ruby2D
       @width = opts[:width] || 0
       @height = opts[:height] || 0
       @words = opts[:text] || 'label'
+      @tag = opts[:tag]
 
       @font = Font.new(
         type: (opts.dig(:font, :type) || :lux).to_sym,
@@ -122,7 +124,7 @@ module Ruby2D
       revert
     end
 
-    def mouse_up x, y
+    def mouse_up x, y, button
       if @first_click && Time.now.to_f - @first_click < 0.20
         if @listener && @action
           @listener.instance_eval @action
@@ -132,6 +134,9 @@ module Ruby2D
       elsif @content.contains? e.x, e.y
         @first_click = Time.now.to_f
       end
+    end
+
+    def mouse_down x, y, button
     end
 
     private

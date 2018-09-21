@@ -87,10 +87,10 @@ module Ruby2D
     def hover_off x, y
     end
 
-    def mouse_down x, y
+    def mouse_down x, y, button
     end
 
-    def mouse_up x, y
+    def mouse_up x, y, button
     end
 
     private

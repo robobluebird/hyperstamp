@@ -23,14 +23,29 @@ module Ruby2D
     end
 
     def export
-      # convert -size 256x256 xc:white \
-      # -draw "fill gray stroke black rectangle 8,8 16,16 \
-      # stroke gray rectangle 16,16 24,24 rectangle 24,24 32,32" \
-      # draw1.png
+      MiniMagick::Tool::Convert.new do |convert|
+        convert.size '256x256'
+        convert << 'xc:none'
+
+        @pixels.each do |p|
+          rgba = "rgba(#{(p.color.r * 255).to_i},#{(p.color.g * 255).to_i},#{(p.color.b * 255).to_i},#{p.color.a})"
+
+          convert.fill rgba
+
+          x = p.x - @canvas.x
+          y = p.y - @canvas.y
+
+          convert.draw "rectangle #{x},#{y} #{x + p.size},#{y + p.size}"
+        end
+
+        convert << 'export.png'
+      end
+
+      true
     end
 
     def objectify
-      [cancel_button, save_button, self]
+      [self, @cancel_button, @save_button]
     end
 
     def cancel
@@ -38,7 +53,11 @@ module Ruby2D
     end
 
     def save
-      @listener.send :save_sketch
+      if export
+        cancel
+      else
+        raise 'Failed to export'
+      end
     end
 
     def translate x, y
@@ -95,14 +114,22 @@ module Ruby2D
     def hover_off x, y
     end
 
-    def mouse_down x, y
-      if canvas?(x, y)
-        @drawing = true
-        maybe_draw x, y
+    def mouse_down x, y, button
+      if canvas? x, y
+        if button == :left
+          @drawing = true
+          maybe_draw x, y
+        elsif button == :right
+          if p = pixel?(x, y)
+            p.remove
+            @pixels.delete p
+            puts @pixels.count
+          end
+        end
       end
     end
 
-    def mouse_up x, y
+    def mouse_up x, y, button
       @drawing = false
     end
 
@@ -111,8 +138,8 @@ module Ruby2D
     end
 
     def canvas? x, y
-      (@canvas.x..(@canvas.x + @canvas.width)).cover?(x) &&
-        (@canvas.y..(@canvas.y + @canvas.height)).cover?(y)
+      (@canvas.x...(@canvas.x + @canvas.width)).cover?(x) &&
+        (@canvas.y...(@canvas.y + @canvas.height)).cover?(y)
     end
 
     def pixel? x, y

@@ -61,10 +61,13 @@ module Ruby2D
       @text.color = "black"
     end
 
-    def mouse_up x, y
+    def mouse_up x, y, button
       if @listener && @action
         @listener.instance_eval @action
       end
+    end
+
+    def mouse_down x, y, button
     end
 
     def contains? x, y

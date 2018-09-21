@@ -2,6 +2,9 @@ require 'ruby2d'
 require 'mini_magick'
 require 'json'
 require 'filemagic'
+require_relative 'checkbox'
+require_relative 'checklist'
+require_relative 'editor'
 require_relative 'sketch_pad'
 require_relative 'file_cabinet'
 require_relative 'list'
@@ -61,6 +64,9 @@ end
 @name = nil
 @created_at = nil
 @updated_at = nil
+@first_edit_click = nil
+@highlighted = nil
+@edited = nil
 
 set title: "..."
 set background: 'white'
@@ -173,10 +179,24 @@ def z
   end
 end
 
+def cool_thing thing
+  [Button, Field].include? thing.class
+end
+
 def zord
-  # sort by something else besides z so that buttons are always
-  # on top or something?
-  @objects.sort { |a,b| b.z <=> a.z }
+  @objects.sort do |a,b|
+    if a.z == b.z
+      if cool_thing(a) && !cool_thing(b)
+        -1
+      elsif !cool_thing(a) && cool_thing(b)
+        1
+      else
+        0
+      end
+    else
+      b.z <=> a.z
+    end
+  end
 end
 
 def resizing? item, e
@@ -267,7 +287,7 @@ on :mouse_down do |e|
 
   if menu? @item
     @menu_mousing = true
-    @item.mouse_down e.x, e.y
+    @item.mouse_down e.x, e.y, e.button
   elsif @mode.draw?
     @drawings << []
     @drawing = true
@@ -276,7 +296,7 @@ on :mouse_down do |e|
     next unless @item
 
     @mtype = if @mode.interact?
-               @item.mouse_down e.x, e.y
+               @item.mouse_down e.x, e.y, e.button
 
                nil
              else
@@ -297,8 +317,8 @@ on :mouse_up do |e|
 
   if @menu_mousing
     menu_element = zord.find { |o| o.contains?(e.x, e.y) && o.is_a?(MenuElement) }
-    menu_element.mouse_up(e.x, e.y) if menu_element
-    @item.mouse_up e.x, e.y
+    menu_element.mouse_up e.x, e.y, e.button if menu_element
+    @item.mouse_up e.x, e.y, e.button
     @menu_mousing = false
     next
   end
@@ -317,16 +337,25 @@ on :mouse_up do |e|
   end
 
   if @mode.edit? && @item.respond_to?(:highlight)
+    if @first_edit_click && Time.now.to_f - @first_edit_click < 0.20
+      if @item.configurable?
+        @edited = @item
+        editor @item
+      end
+    else
+      @first_edit_click = Time.now.to_f
+    end
+
     @highlighted.unhighlight if @highlighted
     @item.highlight
     @highlighted = @item
   elsif @mode.interact?
-    if @item.respond_to? :mouse_up
-      @item.mouse_up e.x, e.y
-    elsif @item.respond_to? :focus
+    if @item.respond_to? :focus
       @focused.defocus if @focus
       @item.focus
       @focused = @item
+    elsif @item.respond_to? :mouse_up
+      @item.mouse_up e.x, e.y, e.button
     end
   end
 
@@ -380,17 +409,6 @@ end
 
 def edit_mode
   @mode.edit
-  # @highlighted = zord.first
-  # @highlighted.highlight if @highlighted
-  #
-  # case type
-  # when :all
-  #   @objects
-  # when :menu
-  #   @objects.select { |o| [MenuItem, MenuElement].include? o.class }
-  # when :objects
-  #   @objects.select { |o| [Button, Field, Graphic, Drawing].include? o.class }
-  # end.sort { |a,b| b.z <=> a.z }
 end
 
 def interact_mode
@@ -406,6 +424,32 @@ def draw_mode
   @highlighted = nil
 end
 
+def editor item
+  @er = Editor.new(
+    background_height: get(:height),
+    background_width: get(:width),
+    listener: self,
+    object: @item
+  )
+
+  @er.add
+
+  @mode.interact
+
+  @objects += @er.objectify
+end
+
+def remove_editor
+  @er.remove
+
+  @mode.edit
+  @edited.highlight
+  @highlighted = @edited
+  @edited = nil
+
+  @objects.count - @objects.reject! { |o| @er.objectify.include? o }.count
+end
+
 def sketch_pad
   @sp ||= SketchPad.new(
     background_height: get(:height),
@@ -417,12 +461,6 @@ def sketch_pad
   @sp.add
 
   @objects += @sp.objectify
-end
-
-def save_sketch
-  # do stuff
-
-  remove_sketch_pad
 end
 
 def remove_sketch_pad
@@ -466,5 +504,7 @@ end
 @menu = Menu.new listener: self, width: get(:width)
 
 @objects += @menu.objectify
+
+@objects << Checklist.new(z: z, x: 50, y: 50, items: ['one', 'two', 'three']).add
 
 show

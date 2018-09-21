@@ -1,6 +1,6 @@
 module Ruby2D
   class Field
-    attr_reader :words, :text_color, :color_scheme, :style, :x, :y, :width, :height, :z
+    attr_reader :text_color, :color_scheme, :style, :x, :y, :width, :height, :z
     attr_accessor :tag
 
     def initialize opts = {}
@@ -24,6 +24,16 @@ module Ruby2D
         type: (opts.dig(:font, :type) || :lux).to_sym,
         size: opts.dig(:font, :size)
       )
+    end
+
+    def text
+      @words
+    end
+
+    def text= new_text
+      @words = new_text
+
+      arrange_text!
     end
 
     def to_h
@@ -208,10 +218,10 @@ module Ruby2D
     def hover_off x, y
     end
 
-    def mouse_up x, y
+    def mouse_up x, y, button
     end
 
-    def mouse_down x, y
+    def mouse_down x, y, button
     end
 
     private
