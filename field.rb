@@ -26,6 +26,10 @@ module Ruby2D
       )
     end
 
+    def configurable?
+      true
+    end
+
     def text
       @words
     end
@@ -34,6 +38,14 @@ module Ruby2D
       @words = new_text
 
       arrange_text!
+    end
+
+    def text_size= size
+      @font.size = size
+
+      arrange_text!
+
+      size
     end
 
     def to_h

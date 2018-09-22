@@ -15,6 +15,7 @@ module Ruby2D
       @height = @background_height
       @z = 4000
       @object = opts[:object]
+      @settings = []
     end
 
     def cancel
@@ -22,17 +23,24 @@ module Ruby2D
     end
 
     def save
-      new_label = @label_field.text
-      @object.label = new_label
+      if @label_field
+        new_label = @label_field.text
+        @object.label = new_label
+      end
 
-      new_size = @size_checklist.checked
-      @object.text_size = new_size.to_i if new_size
+      if @size_checklist
+        new_size = @size_checklist.checked
+        @object.text_size = new_size.to_i if new_size
+      end
 
       cancel
     end
 
     def objectify
-      [self, @label_field, @size_checklist, @cancel_button, @save_button]
+      list = [self, @cancel_button, @save_button]
+      list << @label_field if @label_field
+      list << @size_checklist if @size_checklist
+      list
     end
 
     def translate x, y; end
@@ -54,10 +62,16 @@ module Ruby2D
       @editor.remove
       @cancel_button.remove
       @save_button.remove
-      @label_field.remove
-      @label_label.remove
-      @size_checklist.remove
-      @size_label.remove
+
+      if @label_field
+        @label_field.remove
+        @label_label.remove
+      end
+
+      if @size_checklist
+        @size_checklist.remove
+        @size_label.remove
+      end
 
       @visible = false
 
@@ -137,40 +151,56 @@ module Ruby2D
         height: @editor_size
       )
 
-      @label_label = Label.new(
-        text: 'label',
-        z: @z,
-        x: @editor.x + 10,
-        y: @editor.y,
-        width: 100,
-        height: 20
-      ).add
+      y_offset = 0
 
-      @label_field = Field.new(
-        text: @object.label,
-        z: @z,
-        x: @editor.x + 10,
-        y: @editor.y + 20,
-        width: 100,
-        height: 20,
-        font: { size: 12 }
-      ).add
+      if @object.respond_to? :label=
+        @label_label = Label.new(
+          text: 'label',
+          z: @z,
+          x: @editor.x + 10,
+          y: @editor.y + y_offset,
+          width: 100,
+          height: 20
+        ).add
 
-      @size_label = Label.new(
-        text: 'size',
-        z: @z,
-        x: @editor.x + 10,
-        y: @editor.y + 40,
-        width: 100,
-        height: 20
-      ).add
+        y_offset += 20
 
-      @size_checklist = Checklist.new(
-        z: @z,
-        x: @editor.x + 10,
-        y: @editor.y + 60,
-        items: ['8', '12', '16', '20', '24', '32', '64', '128']
-      ).add
+        @label_field = Field.new(
+          text: @object.label,
+          z: @z,
+          x: @editor.x + 10,
+          y: @editor.y + y_offset,
+          width: 100,
+          height: 20,
+          font: { size: 12 }
+        ).add
+
+        y_offset += 20
+
+        @settings += [@label_label, @label_field]
+      end
+
+      if @object.respond_to? :text_size=
+        @size_label = Label.new(
+          text: 'size',
+          z: @z,
+          x: @editor.x + 10,
+          y: @editor.y + y_offset,
+          width: 100,
+          height: 20
+        ).add
+
+        y_offset += 20
+
+        @size_checklist = Checklist.new(
+          z: @z,
+          x: @editor.x + 10,
+          y: @editor.y + y_offset,
+          items: ['8', '12', '16', '20', '24', '32', '64', '128']
+        ).add
+
+        @settings += [@size_label, @size_checklist]
+      end
 
       @cancel_button = Button.new(
         z: @z,
