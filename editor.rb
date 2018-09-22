@@ -24,13 +24,15 @@ module Ruby2D
     def save
       new_label = @label_field.text
       @object.label = new_label
-      @label_field.text = ''
+
+      new_size = @size_checklist.checked
+      @object.text_size = new_size.to_i if new_size
 
       cancel
     end
 
     def objectify
-      [self, @label_field, @cancel_button, @save_button]
+      [self, @label_field, @size_checklist, @cancel_button, @save_button]
     end
 
     def translate x, y; end
@@ -54,6 +56,8 @@ module Ruby2D
       @save_button.remove
       @label_field.remove
       @label_label.remove
+      @size_checklist.remove
+      @size_label.remove
 
       @visible = false
 
@@ -67,6 +71,11 @@ module Ruby2D
         @editor.add
         @cancel_button.add
         @save_button.add
+        @label_field.text = @object.label
+        @label_field.add
+        @label_label.add
+        @size_checklist.add
+        @size_label.add
       else
         render!
       end
@@ -145,6 +154,22 @@ module Ruby2D
         width: 100,
         height: 20,
         font: { size: 12 }
+      ).add
+
+      @size_label = Label.new(
+        text: 'size',
+        z: @z,
+        x: @editor.x + 10,
+        y: @editor.y + 40,
+        width: 100,
+        height: 20
+      ).add
+
+      @size_checklist = Checklist.new(
+        z: @z,
+        x: @editor.x + 10,
+        y: @editor.y + 60,
+        items: ['8', '12', '16', '20', '24', '32', '64', '128']
       ).add
 
       @cancel_button = Button.new(

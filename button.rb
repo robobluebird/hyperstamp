@@ -29,6 +29,24 @@ module Ruby2D
       )
     end
 
+    def text_size= size
+      @font.size = size
+
+      @text.remove
+
+      @text = Text.new(
+        z: @z,
+        text: @label,
+        font: @font.file,
+        size: @font.size.to_i,
+        color: 'black'
+      )
+
+      arrange_text!
+
+      size
+    end
+
     def enabled?
       @enabled
     end
@@ -70,6 +88,10 @@ module Ruby2D
       arrange_text!
     end
 
+    def text= new_text
+      label = new_text
+    end
+
     def to_h
       {
         type: 'button',
@@ -103,7 +125,7 @@ module Ruby2D
         @content.color = 'white'
       when :white_on_black
         @border.color = 'white'
-        @border.color = 'white'
+        @shadow.color = 'white'
         @text.color = 'white'
         @content.color = 'black'
       else

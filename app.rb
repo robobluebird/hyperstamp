@@ -180,7 +180,7 @@ def z
 end
 
 def cool_thing thing
-  [Button, Field].include? thing.class
+  [Button, Field, Checklist].include? thing.class
 end
 
 def zord
@@ -191,7 +191,7 @@ def zord
       elsif !cool_thing(a) && cool_thing(b)
         1
       else
-        0
+        b.z <=> a.z
       end
     else
       b.z <=> a.z
@@ -504,7 +504,5 @@ end
 @menu = Menu.new listener: self, width: get(:width)
 
 @objects += @menu.objectify
-
-@objects << Checklist.new(z: z, x: 50, y: 50, items: ['one', 'two', 'three']).add
 
 show

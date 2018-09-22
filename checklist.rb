@@ -16,11 +16,19 @@ module Ruby2D
     end
 
     def selected
-      @rendered_items.find { |item| item.checked? }
+      item = @rendered_items.find { |item| item.respond_to?(:checked?) && item.checked? }
+      item.tag if item
+    end
+
+    def checked
+      selected
     end
 
     def add
       if @rendered
+        @border.add
+        @content.add
+        @rendered_items.each { |r| r.add }
       else
         render!
       end
@@ -31,6 +39,10 @@ module Ruby2D
     end
 
     def remove
+      @border.remove
+      @content.remove
+      @rendered_items.each { |r| r.remove }
+
       @visible = false
 
       self
