@@ -1,6 +1,7 @@
 module Ruby2D
   class Editor
-    attr_reader :z, :x, :y, :width, :height, :object, :cancel_button, :save_button
+    attr_reader :z, :x, :y, :width, :height, :cancel_button, :save_button
+    attr_accessor :object
 
     def initialize opts = {}
       @editor_size = 256
@@ -89,6 +90,7 @@ module Ruby2D
         @label_field.add
         @label_label.add
         @size_checklist.add
+        @size_checklist.checked = @object.font.size.to_s
         @size_label.add
       else
         render!
@@ -198,6 +200,8 @@ module Ruby2D
           y: @editor.y + y_offset,
           items: ['8', '12', '16', '20', '24', '32', '64', '128']
         ).add
+
+        @size_checklist.checked = @object.font.size.to_s
 
         @settings += [@size_label, @size_checklist]
       end

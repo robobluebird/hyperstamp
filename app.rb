@@ -425,18 +425,19 @@ def draw_mode
 end
 
 def editor item
-  @er = Editor.new(
+  @er ||= Editor.new(
     background_height: get(:height),
     background_width: get(:width),
-    listener: self,
-    object: @item
+    listener: self
   )
+
+  @er.object = @item
 
   @er.add
 
-  @mode.interact
-
   @objects += @er.objectify
+
+  @mode.interact
 end
 
 def remove_editor

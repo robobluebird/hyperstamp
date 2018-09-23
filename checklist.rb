@@ -24,6 +24,12 @@ module Ruby2D
       selected
     end
 
+    def checked= tag
+      c = @rendered_items.find { |item| item.respond_to?(:check) && item.tag == tag }
+
+      c.check
+    end
+
     def add
       if @rendered
         @border.add

@@ -1,6 +1,6 @@
 module Ruby2D
   class Field
-    attr_reader :text_color, :color_scheme, :style, :x, :y, :width, :height, :z
+    attr_reader :font, :text_color, :color_scheme, :style, :x, :y, :width, :height, :z
     attr_accessor :tag
 
     def initialize opts = {}

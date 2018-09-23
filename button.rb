@@ -1,7 +1,7 @@
 module Ruby2D
   class Button
-    attr_accessor :tag, :label, :action
-    attr_reader :color_scheme, :style, :x, :y, :width, :height, :z
+    attr_accessor :tag, :action
+    attr_reader :font, :label, :color_scheme, :style, :x, :y, :width, :height, :z
 
     def initialize opts = {}
       extend Ruby2D::DSL
@@ -83,7 +83,7 @@ module Ruby2D
     end
 
     def label= new_label
-      @text.text = new_label
+      @label = new_label
 
       arrange_text!
     end
@@ -324,6 +324,8 @@ module Ruby2D
     end
 
     def arrange_text!
+      @text.text = @label
+
       @text.x = @x + (@width / 2) - @text.width / 2
       @text.y = @y + (@height / 2) - @text.height / 2
     end
