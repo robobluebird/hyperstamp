@@ -18,6 +18,10 @@ module Ruby2D
       @z = 4000
     end
 
+    def objectify
+      [self] + @list.objectify
+    end
+
     def visible?
       @visible
     end

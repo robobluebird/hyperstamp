@@ -6,7 +6,6 @@ module Ruby2D
       extend Ruby2D::DSL
 
       @visible = false
-      @events_enabled = false
       @listener = opts[:listener]
       @rendered = false
       @mouse_over = false
@@ -22,6 +21,10 @@ module Ruby2D
       @end_index = [@items.count, ((@height - 2).to_f / @item_height).floor - 1].min
     end
 
+    def objectify
+      [self] + @rendered_items.map(&:objectify)
+    end
+
     def visible?
       @visible
     end
@@ -33,13 +36,6 @@ module Ruby2D
       @content.remove
       @rendered_items.each { |ri| ri.remove }
 
-      if @events_enabled
-        off @hover_event
-        off @scroll_event
-
-        @events_enabled = false
-      end
-
       @visible = false
 
       self
@@ -49,8 +45,6 @@ module Ruby2D
       if @rendered
         @border.add
         @content.add
-
-        events!
       else
         render!
       end
@@ -65,23 +59,6 @@ module Ruby2D
         (@content.y..(@content.y + @content.height)).cover?(y)
     end
 
-    def scroll change
-      change = change.to_i
-
-      change = if change > 0
-                 [change, @items.length - 1 - @end_index].min
-               elsif change < 0
-                 [change, 0 - @start_index].max
-               else
-                 0
-               end
-
-      @start_index += change
-      @end_index += change
-
-      render_items!
-    end
-
     def choose item
       if @listener
         @listener.choose item
@@ -90,6 +67,7 @@ module Ruby2D
       end
     end
 
+    # HEY! We have to "re-objectify" the list if we're changing the items...idiot
     def items= items
       @items = items
       @start_index = 0
@@ -98,39 +76,46 @@ module Ruby2D
       layout_items!
     end
 
-    private
-
-    def events!
-      @hover_event = on :mouse_move do |e|
-        if @rendered
-          if @content.contains? e.x, e.y
-            @mouse_over = true
-            @last_mouse_x = e.x
-            @last_mouse_y = e.y
-          elsif @mouse_over
-            @mouse_over = false
-            @last_mouse_x = nil
-            @last_mouse_y = nil
-          end
-        end
-      end
-
-      @scroll_event = on :mouse_scroll do |e|
-        if @rendered && @mouse_over
-          scroll e.delta_y
-
-          @rendered_items.each do |ri|
-            if ri.contains? @last_mouse_x, @last_mouse_y
-              ri.invert
-            else
-              ri.revert
-            end
-          end
-        end
-      end
-
-      @events_enabled = true
+    def mouse_down x, y, button
     end
+
+    def mouse_up x, y, button
+    end
+
+    def hover_on x, y
+      @last_mouse_x = x
+      @last_mouse_y = y
+    end
+
+    def hover_off x, y
+      @last_mouse_x = nil
+      @last_mouse_y = nil
+    end
+
+    def scroll dx, dy
+      change = if dy > 0
+                 [dy, @items.length - 1 - @end_index].min
+               elsif dy < 0
+                 [dy, 0 - @start_index].max
+               else
+                 0
+               end
+
+      @start_index += change
+      @end_index += change
+
+      render_items!
+
+      @rendered_items.each do |ri|
+        if ri.contains? @last_mouse_x, @last_mouse_y
+          ri.invert
+        else
+          ri.revert
+        end
+      end
+    end
+
+    private
 
     def layout_items!
       @rendered_items.each { |ri| ri.remove }
@@ -191,7 +176,6 @@ module Ruby2D
       )
 
       layout_items!
-      events!
 
       @rendered = true
     end

@@ -21,47 +21,12 @@ require_relative 'menu/menu_item'
 require_relative 'menu/menu_element'
 require_relative 'stack'
 require_relative 'card'
-
-module Ruby2D
-  class Window
-    def mouse_callback(type, button, direction, x, y, delta_x, delta_y)
-      # All mouse events
-      @events[:mouse].dup.each do |id, e|
-        e.call(MouseEvent.new(type, button, direction, x, y, delta_x, delta_y))
-      end
-
-      case type
-      # When mouse button pressed
-      when :down
-        @events[:mouse_down].dup.each do |id, e|
-          e.call(MouseEvent.new(type, button, nil, x, y, nil, nil))
-        end
-      # When mouse button released
-      when :up
-        @events[:mouse_up].dup.each do |id, e|
-          e.call(MouseEvent.new(type, button, nil, x, y, nil, nil))
-        end
-      # When mouse motion / movement
-      when :scroll
-        @events[:mouse_scroll].dup.each do |id, e|
-          e.call(MouseEvent.new(type, nil, direction, x, y, delta_x, delta_y))
-        end
-      # When mouse scrolling, wheel or trackpad
-      when :move
-        @events[:mouse_move].dup.each do |id, e|
-          e.call(MouseEvent.new(type, nil, nil, x, y, delta_x, delta_y))
-        end
-      end
-    end
-  end
-end
+require_relative 'window_ext'
 
 @z = -1
 @item = nil
 @objects = []
 @mode = Mode.new
-@filename = 'test.json'
-@name = nil
 @created_at = nil
 @updated_at = nil
 @first_edit_click = nil
@@ -80,25 +45,31 @@ def write
 end
 
 def read
-  File.open(@filename) do |f|
-    json = JSON.parse(f.read, symbolize_names: true)
+  if @filename
+    File.open(@filename) do |f|
+      json = JSON.parse(f.read, symbolize_names: true)
 
-    # @name = json[:name]
-    # set title: @name
-    #
-    # @created_at = json[:created_at]
-    # @updated_at = json[:updated_at]
-    #
-    # @cards = json[:cards].map do |card|
-    #   Card.new car
-    # end
+      # @name = json[:name]
+      # set title: @name
+      #
+      # @created_at = json[:created_at]
+      # @updated_at = json[:updated_at]
+      #
+      # @cards = json[:cards].map do |card|
+      #   Card.new car
+      # end
 
-    # json[:cards].each do |card|
-    #   card.objects do |o|
-    #     klazz = Object.const_get card[:type].split('_').map(&:capitalize).join
-    #     card.objects.push klazz.new card.merge(z: z)
-    #   end
-    # end
+      # json[:cards].each do |card|
+      #   card.objects do |o|
+      #     klazz = Object.const_get card[:type].split('_').map(&:capitalize).join
+      #     card.objects.push klazz.new card.merge(z: z)
+      #   end
+      # end
+    end
+  else
+    @stack = Stack.new
+    @card = @stack.new_card
+    @objects += @card.render
   end
 end
 
@@ -112,6 +83,7 @@ end
 
 def load_graphic filename
   @menu.activate
+
   @fc.remove if @fc
 
   Dir.mkdir 'images' rescue nil
@@ -126,15 +98,13 @@ def load_graphic filename
 
   path = File.expand_path(File.join('images', filename.split('/').last))
 
-  p path
-
   m.write path
 
-  @objects << Graphic.new(path: path, z: z).add
+  @objects.push @card.add Graphic.new(path: path, z: z).add
 end
 
 def closer item
-  return if item.nil?
+  return if item.nil? && @highlighted.nil?
 
   i = zord.index(item)
   closer_index = i - 1
@@ -146,8 +116,6 @@ def closer item
   z1, z2 = item.z, n.z
   item.z = z2
   n.z = z1
-
-  write
 end
 
 def farther item
@@ -161,8 +129,6 @@ def farther item
   z1, z2 = item.z, n.z
   item.z = z2
   n.z = z1
-
-  write
 end
 
 # how do we intercept mouse events and stop them at an element level?
@@ -180,7 +146,7 @@ def z
 end
 
 def cool_thing thing
-  [Button, Field, Checklist].include? thing.class
+  [Label, Button, Field, Checklist].include? thing.class
 end
 
 def zord
@@ -205,27 +171,11 @@ def resizing? item, e
 end
 
 def new_button
-  @objects << Button.new(
-    z: z,
-    x: 0,
-    y: 20,
-    width: 100,
-    height: 50,
-    label: 'new button').add
-
-  # write
+  @objects.push @card.add Button.new(z: z, x: 0, y: 20, width: 100, height: 50, label: 'new button').add
 end
 
 def new_field
-  @objects << Field.new(
-    z: z,
-    x: 0,
-    y: 20,
-    width: 100,
-    height: 100,
-    text: '').add
-
-  # write
+  @objects.push @card.add Field.new(z: z, x: 0, y: 20, width: 100, height: 100, text: '').add
 end
 
 def new_graphic
@@ -285,6 +235,8 @@ end
 on :mouse_down do |e|
   @item = zord.find { |o| o.visible? && o.contains?(e.x, e.y) }
 
+  puts @item
+
   if menu? @item
     @menu_mousing = true
     @item.mouse_down e.x, e.y, e.button
@@ -296,16 +248,16 @@ on :mouse_down do |e|
     next unless @item
 
     @mtype = if @mode.interact?
-               @item.mouse_down e.x, e.y, e.button
+      @item.mouse_down e.x, e.y, e.button
 
-               nil
-             else
-               if resizing? @item, e
-                 :resize
-               else
-                 :translate
-               end
-             end
+      nil
+    else
+      if resizing? @item, e
+        :resize
+      else
+        :translate
+      end
+    end
   end
 end
 
@@ -362,11 +314,26 @@ on :mouse_up do |e|
   @item = nil
 end
 
+on :mouse_scroll do |e|
+  x = get :mouse_x
+  y = get :mouse_y
+
+  item = zord.find { |o| o.visible? && o.contains?(x, y) && o.respond_to?(:scroll) }
+
+  item.scroll e.delta_x, e.delta_y if item
+end
+
 on :mouse_move do |e|
   if @item && @menu_mousing
     @objects.each do |o|
       if o.contains? e.x, e.y
-        o.hover_on e.x, e.y
+        if o.is_a?(MenuItem) && o != @item
+          @item.mouse_up e.x, e.y, :left
+          @item = o
+          @item.mouse_down e.x, e.y, :left
+        else
+          o.hover_on e.x, e.y
+        end
       else
         o.hover_off e.x, e.y
       end
@@ -413,14 +380,19 @@ end
 
 def interact_mode
   @mode.interact
+
   @highlighted.unhighlight if @highlighted
+
   @highlighted = nil
 end
 
 def draw_mode
   @mode.draw
+
   @objects.each { |o| o.hover_off nil, nil }
+
   @highlighted.unhighlight if @highlighted
+
   @highlighted = nil
 end
 
@@ -471,10 +443,27 @@ def remove_sketch_pad
 end
 
 on :key_down do |e|
+  key = e.key.to_s
+
   if e.key.include? 'shift'
     @shift = true
+    next
   elsif e.key.include? 'command'
     @command = true
+    next
+  end
+
+  key = "shift_#{key}" if @shift
+  key = "command_#{key}" if @command
+
+  if @focused && @focused.editable?
+    @focused.append key
+    @held_key = key
+    @key_counter = 0
+
+    # write
+
+    next
   end
 end
 
@@ -487,23 +476,26 @@ on :key_up do |e|
   elsif key.include? 'command'
     @command = false
     next
+  else
+    @held_key = nil
+    @key_counter = 0
   end
+end
 
-  key = "shift_#{key}" if @shift
-  key = "command_#{key}" if @command
-  key = key.to_sym
+update do
+  if @held_key
+    @key_counter += 1
 
-  if @focused && @focused.editable?
-    @focused.append key.to_s
-
-    # write
-
-    next
+    if @key_counter == 30 || (@key_counter > 30 && @key_counter % 5 == 0)
+      @focused.append @held_key
+    end
   end
 end
 
 @menu = Menu.new listener: self, width: get(:width)
 
 @objects += @menu.objectify
+
+read
 
 show

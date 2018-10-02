@@ -26,6 +26,10 @@ module Ruby2D
       )
     end
 
+    def objectify
+      self
+    end
+
     def visible?
       @visible
     end
@@ -131,7 +135,7 @@ module Ruby2D
         end
 
         @first_click = nil
-      elsif @content.contains? e.x, e.y
+      elsif @content.contains? x, y
         @first_click = Time.now.to_f
       end
     end

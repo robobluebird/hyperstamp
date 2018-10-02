@@ -3,16 +3,20 @@ module Ruby2D
     attr_reader :font, :text_color, :color_scheme, :style, :x, :y, :width, :height, :z
     attr_accessor :tag
 
+    CursorPosition = Struct.new :line, :column
+
     def initialize opts = {}
+      @cursor_position = CursorPosition.new 0, 0
       @visible = false
       @rendered = false
       @shifted = false
       @tag = opts[:tag]
       @lines = []
-      @words = opts[:text] || ''
+      @characters = opts[:text].split('') || []
       @text_color = (opts[:text_color] || :black).to_sym
       @style = (opts[:style] || :opaque).to_sym
       @color_scheme = (opts[:color_scheme] || :black_on_white).to_sym
+      @insert_index = @characters.count
 
       @z      = opts[:z] || 0
       @x      = opts[:x] || 0
@@ -31,11 +35,12 @@ module Ruby2D
     end
 
     def text
-      @words
+      @characters.join
     end
 
     def text= new_text
-      @words = new_text
+      @characters = new_text.split ''
+      @insert_index = @characters.count
 
       arrange_text!
     end
@@ -52,7 +57,7 @@ module Ruby2D
       {
         type: 'field',
         tag: @tag,
-        text: @words,
+        text: @characters.join,
         x: @x,
         y: @y,
         width: @width,
@@ -120,19 +125,44 @@ module Ruby2D
 
     def append str
       if ['up', 'down', 'left', 'right'].include? str
-        # move cursor and insert at
-        # @words.length - cursor vert and horz position
+        if str == 'left'
+          @insert_index -= 1 if @insert_index > 0
+        elsif str == 'right'
+          @insert_index += 1 if @insert_index < @characters.count
+        elsif str == 'up'
+          # @cursor_position.line -= 1
+        else str == 'down'
+          # @cursor_position.line += 1
+        end
+
+        position_cursor
+
+        return
       elsif str.include? 'backspace'
-        @words.slice! -1
+        if @insert_index > 0
+          @insert_index -= 1
+          @characters.delete_at @insert_index
+        end
       elsif str.include? 'return'
-        @words += "\n"
+        @characters.insert @insert_index, "\n"
+        @insert_index += 1
       elsif str.include? 'space'
-        @words += ' '
+        @characters.insert @insert_index, ' '
+        @insert_index += 1
       elsif str.include? 'capslock'
         @shifted = !@shifted
       else
         elements = str.to_s.split('_')
-        @words += Keys.get(elements.last, @shifted || elements.count == 2)
+
+        if elements.include? 'command'
+          # noop, these should be caught at a higher level i think??
+        else
+          char = Keys.get elements.last, @shifted || elements.count == 2
+
+          @characters.insert @insert_index, char if char
+
+          @insert_index += 1
+        end
       end
 
       arrange_text!
@@ -246,7 +276,7 @@ module Ruby2D
         y: @y - 5,
         width: @width + 10,
         height: @height + 10,
-        color: 'blue'
+        color: 'black'
       )
 
       @highlight.hide
@@ -276,7 +306,7 @@ module Ruby2D
         y1: 0,
         x2: 0,
         y2: @font.height,
-        color: 'blue'
+        color: 'black'
       )
 
       style = @style
@@ -302,26 +332,41 @@ module Ruby2D
       return if @content.width < @font.width
 
       chars_across = (@content.width.to_f / @font.width).floor
-      newline_count = @words.count("\n")
-      character_count = @words.length - newline_count
 
-      number_of_newlines = @words.split("\n").reduce(0) do |memo, item|
+      # for each segment between newline chars,
+      # divide the number of chars in the segment by the number
+      # of chars we can display in the line
+      # if the segment char count doesn't fit then we need potentially multiple
+      # more newlines inbetween the newline chars
+      number_of_newlines = @characters.join.split("\n").reduce(0) do |memo, item|
         memo += [(item.length.to_f / chars_across).ceil, 1].max
       end
 
+      number_of_newlines = 1 if number_of_newlines == 0
+
       # consider multiple newlines at the end of the text
       i = -1
-      while @words[i] == "\n"
+      while @characters[i] == "\n"
         number_of_newlines += 1
         i -= 1
       end
 
-      num_lines = [number_of_newlines, (@content.height.to_f / @font.height).floor].min
+      number_of_lines = [number_of_newlines, (@content.height.to_f / @font.height).floor].min
 
       start_index = 0
 
-      num_lines.times do |line_num|
-        next_linebreak = @words.index("\n", start_index)
+      number_of_lines.times do |line_num|
+        next_linebreak = nil
+
+        i = start_index
+        while i < @characters.length
+          if @characters[i] == "\n"
+            next_linebreak = i
+            break
+          end
+
+          i += 1
+        end
 
         options = [
           start_index + chars_across
@@ -336,7 +381,7 @@ module Ruby2D
         @lines << Text.new(
           color: @text_color.to_s,
           z: @z,
-          text: @words[range] || '',
+          text: @characters[range].join || '',
           font: @font.file,
           size: @font.size.to_i,
           x: @content.x,
@@ -346,12 +391,47 @@ module Ruby2D
         start_index = next_linebreak ? end_index + 1 : end_index
       end
 
-      # re-adds it cursor by setting z
-      # @cursor.z = @z
-      @cursor.x1 = @content.x + (@lines.last ? @lines.last.text.length : 0) * @font.width
+      # @cursor_position.column = @lines.last ? @lines.last.text.length : 0
+      # @cursor_position.line = number_of_lines - 1
+
+      position_cursor
+    end
+
+    def position_cursor
+      line = 0
+      column = 0
+      line_character_counter = 0
+      character_counter = 0
+      line_length = (@content.width.to_f / @font.width).floor
+
+      @characters.each_with_index do |character, index|
+        break if character_counter == @insert_index
+
+        line_character_counter += 1
+
+        if character == "\n" || line_character_counter > line_length
+          line += 1
+
+          column = 0
+
+          line_character_counter = 0
+        else
+          column += 1
+        end
+
+        character_counter += 1
+      end
+
+      puts "LINE: #{line}"
+      puts "COLUMN: #{column}"
+
+      @cursor_position.line = line
+      @cursor_position.column = column
+
+      @cursor.x1 = @content.x + @cursor_position.column * @font.width
       @cursor.x2 = @cursor.x1
-      @cursor.y1 = @content.y + (num_lines.zero? ? 0 : num_lines - 1) * @font.height
-      @cursor.y2 = @content.y + (num_lines.zero? ? 1 : num_lines) * @font.height
+      @cursor.y1 = @content.y + @cursor_position.line * @font.height
+      @cursor.y2 = @content.y + (@cursor_position.line + 1) * @font.height
     end
   end
 end

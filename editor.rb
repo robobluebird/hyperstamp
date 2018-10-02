@@ -64,6 +64,11 @@ module Ruby2D
       @cancel_button.remove
       @save_button.remove
 
+      if @tag_field
+        @tag_field.remove
+        @tag_label.remove
+      end
+
       if @label_field
         @label_field.remove
         @label_label.remove
@@ -86,12 +91,24 @@ module Ruby2D
         @editor.add
         @cancel_button.add
         @save_button.add
-        @label_field.text = @object.label
-        @label_field.add
-        @label_label.add
-        @size_checklist.add
-        @size_checklist.checked = @object.font.size.to_s
-        @size_label.add
+
+        if @tag_field
+          @tag_field.text = @object.tag
+          @tag_field.add
+          @tag_label.add
+        end
+
+        if @label_field
+          @label_field.text = @object.label
+          @label_field.add
+          @label_label.add
+        end
+
+        if @size_checklist
+          @size_checklist.add
+          @size_checklist.checked = @object.font.size.to_s
+          @size_label.add
+        end
       else
         render!
       end

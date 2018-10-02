@@ -1,7 +1,7 @@
 class Card
   attr_reader :number, :created_at, :updated_at, :objects
 
-  def intialize opts = {}
+  def initialize opts = {}
     @stack = opts[:stack]
     @number = opts[:number] || 0
 
@@ -15,10 +15,15 @@ class Card
     end
   end
 
+  def render
+    @objects.each(&:add)
+  end
+
   def add object
     @objects << object
     @updated_at = Time.now.to_i
-    @stack.update
+    @stack.update @updated_at
+    object
   end
 
   def to_h
