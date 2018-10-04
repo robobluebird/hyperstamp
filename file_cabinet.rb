@@ -55,21 +55,22 @@ module Ruby2D
         @path = File.expand_path(File.join(@path, item))
 
         if Dir.exist? @path
+          old = @list.rendered_items.dup
+
           @list.items = entries
+
+          new = @list.rendered_items
+
+          @listener.send :replace_objects, old, new
         else
           raise 'dir'
         end
       else
         FileMagic.mime { |fm|
           path = File.expand_path(File.join(@path, item))
-          puts path
-
           res = fm.file(path).match /^#{Regexp.quote(@intent.to_s)}/
-          puts res
 
-          if @listener && @action
-            @listener.send @action, path
-          end
+          @listener.send @action, path if @listener && @action
         }
       end
     end

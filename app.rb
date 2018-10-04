@@ -149,6 +149,11 @@ def cool_thing thing
   [Label, Button, Field, Checklist].include? thing.class
 end
 
+def replace_objects old, new
+  @objects.reject! { |o| old.include? o }
+  @objects += new
+end
+
 def zord
   @objects.sort do |a,b|
     if a.z == b.z
@@ -234,8 +239,6 @@ end
 
 on :mouse_down do |e|
   @item = zord.find { |o| o.visible? && o.contains?(e.x, e.y) }
-
-  puts @item
 
   if menu? @item
     @menu_mousing = true

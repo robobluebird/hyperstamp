@@ -1,6 +1,6 @@
 module Ruby2D
   class List
-    attr_reader :x, :y, :width, :height, :z, :items
+    attr_reader :x, :y, :width, :height, :z, :items, :rendered_items
 
     def initialize opts = {}
       extend Ruby2D::DSL
@@ -22,7 +22,7 @@ module Ruby2D
     end
 
     def objectify
-      [self] + @rendered_items.map(&:objectify)
+      [self] + @rendered_items
     end
 
     def visible?
@@ -67,7 +67,6 @@ module Ruby2D
       end
     end
 
-    # HEY! We have to "re-objectify" the list if we're changing the items...idiot
     def items= items
       @items = items
       @start_index = 0
