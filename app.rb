@@ -32,6 +32,7 @@ require_relative 'window_ext'
 @first_edit_click = nil
 @highlighted = nil
 @edited = nil
+@color = 'black'
 
 set title: "..."
 set background: 'white'
@@ -175,6 +176,14 @@ def resizing? item, e
     ((item.y + item.height - 10)..(item.y + item.height)).cover?(e.y)
 end
 
+def color= color
+  @color = color
+end
+
+def color
+  @color
+end
+
 def new_button
   @objects.push @card.add Button.new(z: z, x: 0, y: 20, width: 100, height: 50, label: 'new button').add
 end
@@ -225,7 +234,7 @@ def maybe_draw x, y
 
   unless pixel? x, y
     p = pixel x, y
-    p = p.merge size: 10, color: 'black', z: z
+    p = p.merge size: 10, color: @color, z: z
 
     @drawings.last << Square.new(p)
   end

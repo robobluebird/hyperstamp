@@ -201,5 +201,30 @@
         "action": ""
       }
     ]
+  },
+  {
+    "text": "colors",
+    "elements": [
+      {
+        "text": "#FFFFFF",
+        "action": "self.color = '#FFFFFF'"
+      },
+      {
+        "text": "#999999",
+        "action": "self.color = '#999999'"
+      },
+      {
+        "text": "#666666",
+        "action": "self.color = '#666666'"
+      },
+      {
+        "text": "#333333",
+        "action": "self.color = '#333333'"
+      },
+      {
+        "text": "#000000",
+        "action": "self.color = '#000000'"
+      }
+    ]
   }
 ]
