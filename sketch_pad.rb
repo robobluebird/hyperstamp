@@ -123,7 +123,6 @@ module Ruby2D
           if p = pixel?(x, y)
             p.remove
             @pixels.delete p
-            puts @pixels.count
           end
         end
       end
@@ -158,7 +157,7 @@ module Ruby2D
 
       unless pixel? x, y
         p = pixel x, y
-        p = p.merge size: 8, color: @color, z: @z
+        p = p.merge size: 8, color: @listener.send(:color), z: @z
 
         @pixels << Square.new(p)
       end

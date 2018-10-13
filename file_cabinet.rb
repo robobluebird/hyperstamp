@@ -18,8 +18,12 @@ module Ruby2D
       @z = 4000
     end
 
+    def cancel
+      @listener.send :remove_file_cabinet
+    end
+
     def objectify
-      [self] + @list.objectify
+      [self, @cancel_button] + @list.objectify
     end
 
     def visible?
@@ -29,6 +33,7 @@ module Ruby2D
     def remove
       @background.remove
       @list.remove
+      @cancel_button.remove
 
       @visible = false
 
@@ -39,6 +44,7 @@ module Ruby2D
       if @rendered
         @background.add
         @list.add
+        @cancel_button.add
       else
         render!
       end
@@ -120,9 +126,17 @@ module Ruby2D
         width: @background_width / 2,
         height: @background_height / 2 + 2,
         items: entries
-      )
+      ).add
 
-      @list.add
+      @cancel_button = Button.new(
+        z: @z,
+        x: @list.x + (@list.width - 100),
+        y: @list.y + @list.height + 5,
+        height: 20,
+        label: 'cancel',
+        listener: self,
+        action: 'cancel'
+      ).add
 
       @rendered = true
     end

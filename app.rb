@@ -22,6 +22,7 @@ require_relative 'menu/menu_element'
 require_relative 'stack'
 require_relative 'card'
 require_relative 'window_ext'
+require_relative 'color_ext'
 
 @z = -1
 @item = nil
@@ -32,7 +33,7 @@ require_relative 'window_ext'
 @first_edit_click = nil
 @highlighted = nil
 @edited = nil
-@color = 'black'
+@color = '#000000'
 
 set title: "..."
 set background: 'white'
@@ -82,28 +83,6 @@ def reset
   clear
 end
 
-def load_graphic filename
-  @menu.activate
-
-  @fc.remove if @fc
-
-  Dir.mkdir 'images' rescue nil
-
-  m = MiniMagick::Image.open filename
-
-  m.colorspace 'gray'
-  m.posterize 5
-  m.resize '256x256'
-  m.scale '50%'
-  m.scale '200%'
-
-  path = File.expand_path(File.join('images', filename.split('/').last))
-
-  m.write path
-
-  @objects.push @card.add Graphic.new(path: path, z: z).add
-end
-
 def closer item
   return if item.nil? && @highlighted.nil?
 
@@ -132,13 +111,12 @@ def farther item
   n.z = z1
 end
 
-# how do we intercept mouse events and stop them at an element level?
 def z
   if @mode.draw?
-    if @inc_z
+    if @already_incremented_z_for_current_drawing
       @z
     else
-      @inc_z = true
+      @already_incremented_z_for_current_drawing = true
       @z += 1
     end
   else
@@ -193,10 +171,6 @@ def new_field
 end
 
 def new_graphic
-  # launch file cabinet with image intent
-  # get file_path back if cool
-  # load_image file_path
-
   @fc ||= FileCabinet.new(
     intent: :image,
     listener: self,
@@ -206,38 +180,26 @@ def new_graphic
   ).add
 
   @objects += @fc.objectify
-
-  @menu.deactivate
 end
 
-@drawings = []
-@drawing = false
+def load_graphic filename
+  remove_file_cabinet
 
-def calc i
-  ((i.to_f / 10).floor * 10)
-end
+  Dir.mkdir 'images' rescue nil
 
-def pixel? x, y
-  @drawings.find do |drawing|
-    drawing.find do |pixel|
-      pixel.x == calc(x) && pixel.y == calc(y)
-    end
-  end
-end
+  m = MiniMagick::Image.open filename
 
-def pixel x, y
-  { x: calc(x), y: calc(y) }
-end
+  m.colorspace 'gray'
+  m.posterize 5
+  m.resize '256x256'
+  m.scale '50%'
+  m.scale '200%'
 
-def maybe_draw x, y
-  return unless @drawing
+  path = File.expand_path(File.join('images', filename.split('/').last))
 
-  unless pixel? x, y
-    p = pixel x, y
-    p = p.merge size: 10, color: @color, z: z
+  m.write path
 
-    @drawings.last << Square.new(p)
-  end
+  @objects.push @card.add Graphic.new(path: path, z: z).add
 end
 
 def menu? item
@@ -253,9 +215,8 @@ on :mouse_down do |e|
     @menu_mousing = true
     @item.mouse_down e.x, e.y, e.button
   elsif @mode.draw?
-    @drawings << []
-    @drawing = true
-    maybe_draw e.x, e.y
+    @card.start_drawing
+    @card.draw e.x, e.y, color, z
   else
     next unless @item
 
@@ -288,8 +249,8 @@ on :mouse_up do |e|
   end
 
   if @mode.draw?
-    @drawing = false
-    @inc_z = false
+    @card.stop_drawing
+    @already_incremented_z_for_current_drawing = false
     next
   end
 
@@ -351,7 +312,7 @@ on :mouse_move do |e|
       end
     end
   elsif @mode.draw?
-    maybe_draw e.x, e.y
+    @card.draw e.x, e.y, color, z
   elsif @item && @mtype
     e.delta_x = 0 if (@item.x + e.delta_x < 0 && @mtype == :translate) || @item.x + @item.width + e.delta_x > get(:width) || @item.x + @item.width + e.delta_x < 0
     e.delta_y = 0 if (@item.y + e.delta_y < 20 && @mtype == :translate) || @item.y + @item.height + e.delta_y > get(:height) || @item.y + @item.height + e.delta_y < 0
@@ -364,24 +325,6 @@ on :mouse_move do |e|
       else
         o.hover_off e.x, e.y
       end
-    end
-  end
-end
-
-def undo
-  if @mode.draw?
-    @last = @drawings.pop
-    @last.map(&:remove)
-    @last
-  end
-end
-
-def redo
-  if @last
-    if @last.is_a?(Array) && @last.first.is_a?(Square)
-      @last.map(&:add)
-      @drawings << @last
-      @last = nil
     end
   end
 end
@@ -452,6 +395,12 @@ def remove_sketch_pad
   @sp.remove
 
   @objects.count - @objects.reject! { |o| @sp.objectify.include? o }.count
+end
+
+def remove_file_cabinet
+  @fc.remove
+
+  @objects.count - @objects.reject! { |o| @fc.objectify.include? o }.count
 end
 
 on :key_down do |e|
