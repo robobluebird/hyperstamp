@@ -19,10 +19,6 @@
         "action": ""
       },
       {
-        "text": "print",
-        "action": ""
-      },
-      {
         "text": "quit",
         "action": ""
       }
@@ -31,26 +27,6 @@
   {
     "text": "edit",
     "elements": [
-      {
-        "text": "undo",
-        "action": "undo"
-      },
-      {
-        "text": "cut",
-        "action": ""
-      },
-      {
-        "text": "copy",
-        "action": ""
-      },
-      {
-        "text": "paste",
-        "action": ""
-      },
-      {
-        "text": "clear",
-        "action": ""
-      },
       {
         "text": "new card",
         "action": ""
@@ -61,18 +37,6 @@
       },
       {
         "text": "paste card",
-        "action": ""
-      },
-      {
-        "text": "font",
-        "action": ""
-      },
-      {
-        "text": "background",
-        "action": ""
-      },
-      {
-        "text": "icon",
         "action": ""
       }
     ]
@@ -135,26 +99,6 @@
     "text": "objects",
     "elements": [
       {
-        "text": "button info",
-        "action": ""
-      },
-      {
-        "text": "field info",
-        "action": ""
-      },
-      {
-        "text": "card info",
-        "action": ""
-      },
-      {
-        "text": "background info",
-        "action": ""
-      },
-      {
-        "text": "stack info",
-        "action": ""
-      },
-      {
         "text": "bring closer",
         "action": ""
       },
@@ -175,8 +119,8 @@
         "action": "new_graphic"
       },
       {
-        "text": "new background",
-        "action": ""
+        "text": "new icon",
+        "action": "new_icon"
       }
     ]
   },
@@ -184,26 +128,106 @@
     "text": "font",
     "elements": [
       {
-        "text": "Chicago",
-        "action": ""
-      }
-    ]
-  },
-  {
-    "text": "style",
-    "elements": [
-      {
-        "text": "bold",
-        "action": ""
+        "text": "Digital",
+        "action": "self.font = 'digital'"
       },
       {
-        "text": "italic",
-        "action": ""
+        "text": "Digital Italic",
+        "action": "self.font = 'digital_italic'"
+      },
+      {
+        "text": "Erika",
+        "action": "self.font = 'erika'"
+      },
+      {
+        "text": "Liberation",
+        "action": "self.font = 'liberation'"
+      },
+      {
+        "text": "Liberation Bold",
+        "action": "self.font = 'liberation_bold'"
+      },
+      {
+        "text": "Liberation Italic",
+        "action": "self.font = 'liberation_italic'"
+      },
+      {
+        "text": "Lux",
+        "action": "self.font = 'lux'"
+      },
+      {
+        "text": "Scratch",
+        "action": "self.font = 'scratch'"
+      },
+      {
+        "text": "Scream",
+        "action": "self.font = 'scream'"
+      },
+      {
+        "text": "Source",
+        "action": "self.font = 'source'"
+      },
+      {
+        "text": "Source Bold",
+        "action": "self.font = 'source_bold'"
+      },
+      {
+        "text": "Source Light",
+        "action": "self.font = 'source_light'"
+      },
+      {
+        "text": "Ubuntu",
+        "action": "self.font = 'ubuntu'"
+      },
+      {
+        "text": "Ubuntu Bold",
+        "action": "self.font = 'ubuntu_bold'"
+      },
+      {
+        "text": "Ubuntu Italic",
+        "action": "self.font = 'ubuntu_italic'"
       }
     ]
   },
   {
-    "text": "colors",
+    "text": "size",
+    "elements": [
+      {
+        "text": "8",
+        "action": "self.font_size = 8"
+      },
+      {
+        "text": "12",
+        "action": "self.font_size = 12"
+      },
+      {
+        "text": "16",
+        "action": "self.font_size = 16"
+      },
+      {
+        "text": "20",
+        "action": "self.font_size = 20"
+      },
+      {
+        "text": "24",
+        "action": "self.font_size = 24"
+      },
+      {
+        "text": "32",
+        "action": "self.font_size = 32"
+      },
+      {
+        "text": "64",
+        "action": "self.font_size = 64"
+      },
+      {
+        "text": "128",
+        "action": "self.font_size = 128"
+      }
+    ]
+  },
+  {
+    "text": "color",
     "elements": [
       {
         "text": "#FFFFFF",

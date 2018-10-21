@@ -25,7 +25,7 @@ module Ruby2D
       @height = opts[:height] || 100
 
       @font = Font.new(
-        type: (opts.dig(:font, :type) || :lux).to_sym,
+        type: opts.dig(:font, :type),
         size: opts.dig(:font, :size)
       )
     end
@@ -421,9 +421,6 @@ module Ruby2D
 
         character_counter += 1
       end
-
-      puts "LINE: #{line}"
-      puts "COLUMN: #{column}"
 
       @cursor_position.line = line
       @cursor_position.column = column

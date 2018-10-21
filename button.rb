@@ -24,12 +24,30 @@ module Ruby2D
       @height = opts[:height] || 50
 
       @font = Font.new(
-        type: (opts.dig(:font, :type) || :lux).to_sym,
+        type: opts.dig(:font, :type),
         size: opts.dig(:font, :size)
       )
     end
 
-    def text_size= size
+    def font= font
+      @font.font = font
+
+      @text.remove
+
+      @text = Text.new(
+        z: @z,
+        text: @label,
+        font: @font.file,
+        size: @font.size.to_i,
+        color: 'black'
+      )
+
+      arrange_text!
+
+      font
+    end
+
+    def font_size= size
       @font.size = size
 
       @text.remove
@@ -45,6 +63,10 @@ module Ruby2D
       arrange_text!
 
       size
+    end
+
+    def text_size= size
+      self.font_size = size
     end
 
     def enabled?

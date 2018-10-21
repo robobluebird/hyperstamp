@@ -34,6 +34,8 @@ require_relative 'color_ext'
 @highlighted = nil
 @edited = nil
 @color = '#000000'
+@font = 'lux'
+@font_size = 16
 
 set title: "..."
 set background: 'white'
@@ -162,12 +164,30 @@ def color
   @color
 end
 
+def font= font
+  @font = font
+  @highlighted.font = font if @highlighted
+end
+
+def font
+  @font
+end
+
+def font_size= font_size
+  @font_size = font_size
+  @highlighted.font_size = font_size if @highlighted
+end
+
+def font_size
+  @font_size
+end
+
 def new_button
-  @objects.push @card.add Button.new(z: z, x: 0, y: 20, width: 100, height: 50, label: 'new button').add
+  @objects.push @card.add Button.new(z: z, x: 0, y: 20, width: 100, height: 50, label: 'new button', font: { type: @font, size: @font_size }).add
 end
 
 def new_field
-  @objects.push @card.add Field.new(z: z, x: 0, y: 20, width: 100, height: 100, text: '').add
+  @objects.push @card.add Field.new(z: z, x: 0, y: 20, width: 100, height: 100, text: '', font: { type: @font, size: @font_size }).add
 end
 
 def new_graphic
@@ -235,18 +255,18 @@ on :mouse_down do |e|
 end
 
 on :mouse_up do |e|
-  @focused.defocus if @focused
-  @highlighted.unhighlight if @highlighted
-  @focused = nil
-  @highlighted = nil
-
   if @menu_mousing
-    menu_element = zord.find { |o| o.contains?(e.x, e.y) && o.is_a?(MenuElement) }
+    menu_element = zord.find { |o| o.contains?(e.x, e.y) && o.is_a?(MenuElement) && o.visible? }
     menu_element.mouse_up e.x, e.y, e.button if menu_element
     @item.mouse_up e.x, e.y, e.button
     @menu_mousing = false
     next
   end
+
+  @focused.defocus if @focused
+  @highlighted.unhighlight if @highlighted
+  @focused = nil
+  @highlighted = nil
 
   if @mode.draw?
     @card.stop_drawing

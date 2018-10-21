@@ -81,6 +81,7 @@ class Font
   end
 
   def font= type
+    type = type.to_sym
     font_def = Fonts.all.find { |f| f.type == type }
     raise unless font_def
     @font_def = font_def

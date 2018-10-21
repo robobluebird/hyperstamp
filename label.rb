@@ -21,7 +21,7 @@ module Ruby2D
       @tag = opts[:tag]
 
       @font = Font.new(
-        type: (opts.dig(:font, :type) || :lux).to_sym,
+        type: opts.dig(:font, :type),
         size: opts.dig(:font, :size) || 12
       )
     end
