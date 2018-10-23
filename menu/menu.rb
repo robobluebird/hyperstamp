@@ -32,6 +32,26 @@ module Ruby2D
       self.items
     end
 
+    def remove
+      @background.remove
+      @border.remove
+      @items.each(&:remove)
+    end
+
+    def select item_term, element_term
+      items.each do |item|
+        if item_term == item.text
+          element = item.elements.find { |e| e.text == element_term }
+
+          if element
+            item.elements.each(&:deselect)
+
+            element.select
+          end
+        end
+      end
+    end
+
     def objectify
       items.reduce([]) { |memo, item| memo += [item, *(item.elements)] }
     end
@@ -48,7 +68,7 @@ module Ruby2D
 
     def items
       @items ||= begin
-        x = 20
+        x = 5
 
         File.open('menu/menu.json') do |f|
           JSON.parse(f.read, symbolize_names: true).map do |item|

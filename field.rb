@@ -6,6 +6,7 @@ module Ruby2D
     CursorPosition = Struct.new :line, :column
 
     def initialize opts = {}
+      @bordered = opts[:bordered].nil? ? true : opts[:bordered]
       @cursor_position = CursorPosition.new 0, 0
       @visible = false
       @rendered = false
@@ -75,6 +76,10 @@ module Ruby2D
       @visible
     end
 
+    def bordered?
+      @bordered
+    end
+
     def remove
       clear_text!
 
@@ -91,7 +96,7 @@ module Ruby2D
     def add
       if @rendered
         @highlight.add
-        @border.add
+        @border.add if bordered?
         @content.add
         arrange_text!
         @cursor.add
@@ -290,6 +295,8 @@ module Ruby2D
         thickness: 1,
         color: 'black'
       )
+
+      @border.remove unless bordered?
 
       @content = Rectangle.new(
         z: @z,

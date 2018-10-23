@@ -35,54 +35,127 @@ require_relative 'color_ext'
 @edited = nil
 @color = '#000000'
 @font = 'lux'
-@font_size = 16
+@font_size = 12
+@path = nil
 
 set title: "..."
 set background: 'white'
 
-def write
-  @card.updated_at = Time.now.to_i
+def create_menu
+  @menu.remove if @menu
 
-  File.open(@filename, 'w') do |f|
-    f.write JSON.pretty_generate @stack.to_h
+  @menu = Menu.new listener: self, width: get(:width)
+
+  @objects += @menu.objectify
+end
+
+def editable?
+  @stack.editable? && @card.editable?
+end
+
+def card_number
+  if @card_number
+    @card_number.text = "#{@card.number}/#{@stack.cards.count}"
+
+    @card_number.x = get(:width) - @card_number.width - 5
+  else
+    @card_number = Label.new(
+      y: 0,
+      z: 4000,
+      text: "#{@card.number}/#{@stack.cards.count}"
+    ).add
+
+    @card_number.x = get(:width) - @card_number.width - 5
   end
 end
 
-def read
-  if @filename
-    File.open(@filename) do |f|
-      json = JSON.parse(f.read, symbolize_names: true)
+def new_stack
+  show_file_cabinet_with_text_input extension: 'stack', action: 'create_stack'
+end
 
-      # @name = json[:name]
-      # set title: @name
-      #
-      # @created_at = json[:created_at]
-      # @updated_at = json[:updated_at]
-      #
-      # @cards = json[:cards].map do |card|
-      #   Card.new car
-      # end
+def open_stack
+  show_file_cabinet extension: 'stack', action: 'load_stack'
+end
 
-      # json[:cards].each do |card|
-      #   card.objects do |o|
-      #     klazz = Object.const_get card[:type].split('_').map(&:capitalize).join
-      #     card.objects.push klazz.new card.merge(z: z)
-      #   end
-      # end
+def write
+  if @path && editable?
+    @card.updated_at = Time.now.to_i
+
+    File.open(@path, 'w') do |f|
+      f.write JSON.pretty_generate @stack.to_h
     end
   else
-    @stack = Stack.new
-    @card = @stack.new_card
-    @objects += @card.render
+    puts "Can't write! Path = #{@path} and Stack editability = #{editable?}"
   end
 end
 
-def reset
-  @objects = []
-  @item = nil
-  @mode = Mode.new
+def create_stack name, path
+  new_stack = Stack.new name: name
 
-  clear
+  new_stack.new_card
+
+  File.open(path, 'w') { |f| f.write JSON.pretty_generate new_stack.to_h }
+
+  load_stack path
+end
+
+def load_stack path
+  rep = JSON.parse File.read(path)
+
+  unload
+
+  @stack = Stack.new rep
+
+  @card = @stack.cards.first || @stack.new_card
+
+  card_number
+
+  @objects += @card.render
+
+  @path = path
+end
+
+def unload
+  @mode.interact
+  @objects.each { |o| o.remove }
+  @objects = []
+  create_menu
+end
+
+def new_card
+  return unless editable?
+
+  @stack.new_card
+end
+
+def next_card
+
+end
+
+def previous_card
+
+end
+
+def first_card
+
+end
+
+def last_card
+
+end
+
+def home
+  @stack = Stack.new
+
+  @card = @stack.new_card
+
+  new_field bordered: false, x: 0, y: 20, width: get(:width), height: get(:height) - 20, text: 'welcome to mini hyper card', font: { size: 64 }
+
+  @stack.editable = false
+
+  card_number
+
+  @stack
 end
 
 def closer item
@@ -166,6 +239,7 @@ end
 
 def font= font
   @font = font
+
   @highlighted.font = font if @highlighted
 end
 
@@ -175,6 +249,7 @@ end
 
 def font_size= font_size
   @font_size = font_size
+
   @highlighted.font_size = font_size if @highlighted
 end
 
@@ -183,31 +258,31 @@ def font_size
 end
 
 def new_button
-  @objects.push @card.add Button.new(z: z, x: 0, y: 20, width: 100, height: 50, label: 'new button', font: { type: @font, size: @font_size }).add
+  return unless editable?
+
+  @objects.push @card.add Button.new(z: z, x: 0, y: 20, width: 100, height: 50, label: 'new button').add
 end
 
-def new_field
-  @objects.push @card.add Field.new(z: z, x: 0, y: 20, width: 100, height: 100, text: '', font: { type: @font, size: @font_size }).add
+def new_field opts = {}
+  return unless editable?
+
+  opts = { z: z, x: 0, y: 20, width: 100, height: 100, text: '' }.merge opts
+
+  @objects.push @card.add Field.new(opts).add
 end
 
 def new_graphic
-  @fc ||= FileCabinet.new(
-    intent: :image,
-    listener: self,
-    background_width: get(:width),
-    background_height: get(:height),
-    action: 'load_graphic'
-  ).add
+  return unless editable?
 
-  @objects += @fc.objectify
+  show_file_cabinet intent: 'image', action: 'load_graphic'
 end
 
-def load_graphic filename
+def load_graphic path
   remove_file_cabinet
 
   Dir.mkdir 'images' rescue nil
 
-  m = MiniMagick::Image.open filename
+  m = MiniMagick::Image.open path
 
   m.colorspace 'gray'
   m.posterize 5
@@ -215,11 +290,11 @@ def load_graphic filename
   m.scale '50%'
   m.scale '200%'
 
-  path = File.expand_path(File.join('images', filename.split('/').last))
+  stored_path = File.expand_path(File.join('images', path.split('/').last))
 
-  m.write path
+  m.write stored_path
 
-  @objects.push @card.add Graphic.new(path: path, z: z).add
+  @objects.push @card.add Graphic.new(path: stored_path, z: z).add
 end
 
 def menu? item
@@ -257,7 +332,19 @@ end
 on :mouse_up do |e|
   if @menu_mousing
     menu_element = zord.find { |o| o.contains?(e.x, e.y) && o.is_a?(MenuElement) && o.visible? }
-    menu_element.mouse_up e.x, e.y, e.button if menu_element
+
+    if menu_element
+      if @item.selectable?
+        if editable?
+          @item.elements.each { |me| me.deselect }
+          menu_element.mouse_up e.x, e.y, e.button
+          menu_element.select if @item.selectable? && editable?
+        end
+      else
+        menu_element.mouse_up e.x, e.y, e.button
+      end
+    end
+
     @item.mouse_up e.x, e.y, e.button
     @menu_mousing = false
     next
@@ -350,11 +437,15 @@ on :mouse_move do |e|
 end
 
 def edit_mode
+  return unless editable?
+
   @mode.edit
 end
 
 def interact_mode
   @mode.interact
+
+  @menu.select 'tools', 'interact'
 
   @highlighted.unhighlight if @highlighted
 
@@ -362,6 +453,8 @@ def interact_mode
 end
 
 def draw_mode
+  return unless editable?
+
   @mode.draw
 
   @objects.each { |o| o.hover_off nil, nil }
@@ -412,15 +505,46 @@ def sketch_pad
 end
 
 def remove_sketch_pad
+  interact_mode
+
   @sp.remove
 
   @objects.count - @objects.reject! { |o| @sp.objectify.include? o }.count
 end
 
+def show_file_cabinet_with_text_input opts = {}
+  opts = {
+    save: true,
+    listener: self,
+    background_width: get(:width),
+    background_height: get(:height),
+  }.merge opts
+
+  @fc ||= FileCabinet.new(opts).add
+
+  @objects += @fc.objectify
+end
+
+def show_file_cabinet opts = {}
+  opts = {
+    listener: self,
+    background_width: get(:width),
+    background_height: get(:height),
+  }.merge opts
+
+  @fc ||= FileCabinet.new(opts).add
+
+  @objects += @fc.objectify
+end
+
 def remove_file_cabinet
   @fc.remove
 
-  @objects.count - @objects.reject! { |o| @fc.objectify.include? o }.count
+  amt_rmv = @objects.count - @objects.reject! { |o| @fc.objectify.include? o }.count
+
+  @fc = nil
+
+  amt_rmv
 end
 
 on :key_down do |e|
@@ -473,10 +597,10 @@ update do
   end
 end
 
-@menu = Menu.new listener: self, width: get(:width)
+create_menu
 
-@objects += @menu.objectify
+home
 
-read
+interact_mode
 
 show

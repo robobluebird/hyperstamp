@@ -295,7 +295,7 @@ module Ruby2D
         width: @width + 10,
         height: @height + 10,
         thickness: 5,
-        color: 'blue'
+        color: 'black'
       )
 
       @highlight.hide

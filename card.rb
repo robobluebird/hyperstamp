@@ -1,9 +1,11 @@
 class Card
-  attr_reader :number, :created_at, :updated_at, :objects
+  attr_reader :created_at, :updated_at, :objects, :number
+  attr_accessor :number, :editable
 
   def initialize opts = {}
     @stack = opts[:stack]
     @number = opts[:number] || 0
+    @editable = opts[:editable].nil? ? true : opts[:editable]
 
     t = Time.now.to_i
     @created_at = opts[:created_at] || t
@@ -16,6 +18,10 @@ class Card
 
     @pixels = opts[:pixels] || []
     @drawing = false
+  end
+
+  def editable?
+    @editable
   end
 
   def pixel? x, y
@@ -87,6 +93,7 @@ class Card
   def to_h
     {
       number: @number,
+      editable: @editable,
       created_at: @created_at,
       updated_at: @updated_at,
       objects: @objects.map(&:to_h),

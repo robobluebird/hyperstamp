@@ -3,6 +3,7 @@ module Ruby2D
     attr_reader :x, :y, :width, :height, :z, :active, :elements
 
     def initialize opts = {}
+      @selectable = opts[:selectable] || false
       @visible = false
       @active = true
       @open = false
@@ -14,6 +15,14 @@ module Ruby2D
       @height = 20
       @elements_ = opts[:elements] || []
       @elements = []
+    end
+
+    def text
+      @words
+    end
+
+    def selectable?
+      @selectable
     end
 
     def visible?
@@ -36,6 +45,7 @@ module Ruby2D
     def remove
       @background.remove
       @text.remove
+      @elements.each(&:remove)
 
       @visible = false
 

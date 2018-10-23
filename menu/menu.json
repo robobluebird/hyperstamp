@@ -4,11 +4,11 @@
     "elements": [
       {
         "text": "new stack",
-        "action": ""
+        "action": "new_stack"
       },
       {
         "text": "open stack",
-        "action": ""
+        "action": "open_stack"
       },
       {
         "text": "save stack",
@@ -75,6 +75,7 @@
     ]
   },
   {
+    "selectable": true,
     "text": "tools",
     "elements": [
       {
@@ -125,6 +126,7 @@
     ]
   },
   {
+    "selectable": true,
     "text": "font",
     "elements": [
       {
@@ -190,6 +192,7 @@
     ]
   },
   {
+    "selectable": true,
     "text": "size",
     "elements": [
       {

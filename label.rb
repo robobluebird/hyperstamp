@@ -26,6 +26,20 @@ module Ruby2D
       )
     end
 
+    def text= text
+      @text.text = text
+
+      @width = @text.width if @text.width > @width
+      @height = @text.height if @text.height > @height
+
+      @highlight.resize_to @width + 10, @height + 10
+
+      @content.width = @width
+      @content.height = @height
+
+      arrange_text!
+    end
+
     def objectify
       self
     end
@@ -74,6 +88,7 @@ module Ruby2D
       @x = x
       @highlight.move_to @x, @y
       @content.x = @x
+      @text.x = @x
       arrange_text!
     end
 
@@ -81,6 +96,7 @@ module Ruby2D
       @y = y
       @highlight.move_to @x, @y
       @content.y = @y
+      @text.y = @y
       arrange_text!
     end
 
@@ -153,7 +169,7 @@ module Ruby2D
         width: @width + 10,
         height: @height + 10,
         thickness: 5,
-        color: 'blue'
+        color: 'black'
       )
 
       @highlight.hide

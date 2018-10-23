@@ -3,6 +3,7 @@ module Ruby2D
     attr_reader :x, :y, :z, :width, :height, :action
 
     def initialize opts = {}
+      @selected = false
       @visible = false
       @listener = opts[:listener]
       @x = opts[:x]
@@ -28,6 +29,8 @@ module Ruby2D
         z: @z
       )
 
+      @words = opts[:text]
+
       @text = Text.new(
         x: @x + 1,
         y: @y + 1,
@@ -51,12 +54,44 @@ module Ruby2D
       @text.x = @text.x + 10
     end
 
+    def text
+      @words
+    end
+
+    def selected?
+      @selected
+    end
+
+    def select
+      invert
+      @selected = true
+      self
+    end
+
+    def deselect
+      revert
+      @selected = false
+      self
+    end
+
+    def invert
+      @background.color = 'black'
+      @text.color = 'white'
+    end
+
+    def revert
+      @background.color = 'white'
+      @text.color = 'black'
+    end
+
     def hover_on x, y
       @background.color = "black"
       @text.color = "white"
     end
 
     def hover_off x, y
+      return if selected?
+
       @background.color = "white"
       @text.color = "black"
     end
@@ -95,6 +130,12 @@ module Ruby2D
       @text.add
 
       @visible = true
+
+      if @selected
+        invert
+      else
+        revert
+      end
 
       self
     end
