@@ -34,6 +34,11 @@ module Ruby2D
         @object.text_size = new_size.to_i if new_size
       end
 
+      if @bordered_checklist
+        bordered = @bordered_checklist.checked
+        @object.bordered = {yes: true, no: false}[bordered.to_sym]
+      end
+
       cancel
     end
 
@@ -41,6 +46,7 @@ module Ruby2D
       list = [self, @cancel_button, @save_button]
       list << @label_field if @label_field
       list << @size_checklist if @size_checklist
+      list << @bordered_checklist if @bordered_checklist
       list
     end
 
@@ -79,6 +85,11 @@ module Ruby2D
         @size_label.remove
       end
 
+      if @bordered_checklist
+        @bordered_checklist.remove
+        @bordered_label.remove
+      end
+
       @visible = false
 
       self
@@ -108,6 +119,12 @@ module Ruby2D
           @size_checklist.add
           @size_checklist.checked = @object.font.size.to_s
           @size_label.add
+        end
+
+        if @bordered_checklist
+          @bordered_checklist.add
+          @bordered_checklist.checked = @object.bordered? ? 'yes' : 'no'
+          @bordered_label.add
         end
       else
         render!
@@ -220,7 +237,34 @@ module Ruby2D
 
         @size_checklist.checked = @object.font.size.to_s
 
+        y_offset += 20
+
         @settings += [@size_label, @size_checklist]
+      end
+
+      if @object.respond_to? :bordered=
+        @bordered_label = Label.new(
+          text: 'border?',
+          z: @z,
+          x: @editor.x + 10,
+          y: @editor.y + y_offset,
+          height: 20
+        ).add
+
+        y_offset += 20
+
+        @bordered_checklist = Checklist.new(
+          z: @z,
+          x: @editor.x + 10,
+          y: @editor.y + y_offset,
+          items: ['yes', 'no']
+        ).add
+
+        @bordered_checklist.checked = @object.bordered? ? 'yes' : 'no'
+
+        y_offset += 20
+
+        @settings += [@bordered_label, @bordered_checklist]
       end
 
       @cancel_button = Button.new(

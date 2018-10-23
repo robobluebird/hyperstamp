@@ -13,6 +13,10 @@ class Stack
     @number = @cards.count
   end
 
+  def card number
+    @cards[number - 1]
+  end
+
   def editable?
     @editable
   end
@@ -29,8 +33,11 @@ class Stack
 
   def new_card
     card = Card.new stack: self, number: number, editable: editable?
+
     @cards << card
+
     @updated_at = @cards.last.updated_at
+
     card
   end
 

@@ -41,14 +41,6 @@ require_relative 'color_ext'
 set title: "..."
 set background: 'white'
 
-def create_menu
-  @menu.remove if @menu
-
-  @menu = Menu.new listener: self, width: get(:width)
-
-  @objects += @menu.objectify
-end
-
 def editable?
   @stack.editable? && @card.editable?
 end
@@ -69,6 +61,22 @@ def card_number
   end
 end
 
+def unload
+  interact_mode
+
+  @objects.each { |o| o.remove unless @menu.objectify.include? o }
+
+  @objects.select! { |o| @menu.objectify.include? o }
+end
+
+def create_menu
+  @menu.remove if @menu
+
+  @menu = Menu.new listener: self, width: get(:width)
+
+  @objects += @menu.objectify
+end
+
 def new_stack
   show_file_cabinet_with_text_input extension: 'stack', action: 'create_stack'
 end
@@ -77,15 +85,19 @@ def open_stack
   show_file_cabinet extension: 'stack', action: 'load_stack'
 end
 
-def write
+def save_stack
   if @path && editable?
-    @card.updated_at = Time.now.to_i
+    @card.update
+
+    puts @path
 
     File.open(@path, 'w') do |f|
       f.write JSON.pretty_generate @stack.to_h
     end
+
+    true
   else
-    puts "Can't write! Path = #{@path} and Stack editability = #{editable?}"
+    false
   end
 end
 
@@ -115,36 +127,65 @@ def load_stack path
   @path = path
 end
 
-def unload
-  @mode.interact
-  @objects.each { |o| o.remove }
-  @objects = []
-  create_menu
-end
-
 def new_card
-  return unless editable?
+  return unless @stack.editable?
 
-  @stack.new_card
+  @card = @stack.new_card
+
+  card_number
+
+  unload
+
+  @objects += @card.render
 end
 
 def next_card
+  return unless @card.number < @stack.cards.count
 
+  @card = @stack.card @card.number + 1
+
+  card_number
+
+  unload
+
+  @objects += @card.render
 end
 
 def previous_card
+  return unless @card.number > 1
 
+  @card = @stack.card @card.number - 1
+
+  card_number
+
+  unload
+
+  @objects += @card.render
 end
 
 def first_card
+  @card = @stack.cards.first
 
+  card_number
+
+  unload
+
+  @objects += @card.render
 end
 
 def last_card
+  @card = @stack.card @stack.cards.count
 
+  card_number
+
+  unload
+
+  @objects += @card.render
 end
 
 def home
+  unload
+
   @stack = Stack.new
 
   @card = @stack.new_card
@@ -158,8 +199,10 @@ def home
   @stack
 end
 
-def closer item
-  return if item.nil? && @highlighted.nil?
+def closer
+  return if @highlighted.nil?
+
+  item = @highlighted
 
   i = zord.index(item)
   closer_index = i - 1
@@ -171,10 +214,14 @@ def closer item
   z1, z2 = item.z, n.z
   item.z = z2
   n.z = z1
+
+  save_stack
 end
 
-def farther item
-  return if item.nil?
+def farther
+  return if @highlighted.nil?
+
+  item = @highlighted
 
   i = zord.index(item)
   n = zord[i + 1]
@@ -184,6 +231,8 @@ def farther item
   z1, z2 = item.z, n.z
   item.z = z2
   n.z = z1
+
+  save_stack
 end
 
 def z
@@ -347,6 +396,7 @@ on :mouse_up do |e|
 
     @item.mouse_up e.x, e.y, e.button
     @menu_mousing = false
+    save_stack
     next
   end
 
@@ -358,13 +408,14 @@ on :mouse_up do |e|
   if @mode.draw?
     @card.stop_drawing
     @already_incremented_z_for_current_drawing = false
+    save_stack
     next
   end
 
   next unless @item
 
   if @mtype
-    # write
+    save_stack
     @mtype = nil
   end
 
@@ -488,7 +539,7 @@ def remove_editor
   @highlighted = @edited
   @edited = nil
 
-  @objects.count - @objects.reject! { |o| @er.objectify.include? o }.count
+  save_stack
 end
 
 def sketch_pad
@@ -532,7 +583,9 @@ def show_file_cabinet opts = {}
     background_height: get(:height),
   }.merge opts
 
-  @fc ||= FileCabinet.new(opts).add
+  @fc ||= FileCabinet.new(opts)
+
+  @fc.add
 
   @objects += @fc.objectify
 end
@@ -540,11 +593,7 @@ end
 def remove_file_cabinet
   @fc.remove
 
-  amt_rmv = @objects.count - @objects.reject! { |o| @fc.objectify.include? o }.count
-
-  @fc = nil
-
-  amt_rmv
+  @objects.count - @objects.reject! { |o| @fc.objectify.include? o }.count
 end
 
 on :key_down do |e|
@@ -566,7 +615,7 @@ on :key_down do |e|
     @held_key = key
     @key_counter = 0
 
-    # write
+    save_stack
 
     next
   end
@@ -593,6 +642,8 @@ update do
 
     if @key_counter == 30 || (@key_counter > 30 && @key_counter % 5 == 0)
       @focused.append @held_key
+
+      save_stack
     end
   end
 end

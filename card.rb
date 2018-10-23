@@ -79,8 +79,14 @@ class Card
   end
 
   def render
-    @objects.each(&:add)
     @pixels.each { |pixel| Square.new pixel }
+    @objects.each(&:add)
+  end
+
+  def update time = nil
+    time = time || Time.now.to_i
+    @updated_at = time
+    @stack.update time
   end
 
   def add object

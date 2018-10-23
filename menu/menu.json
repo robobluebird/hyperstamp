@@ -29,7 +29,7 @@
     "elements": [
       {
         "text": "new card",
-        "action": ""
+        "action": "new_card"
       },
       {
         "text": "copy card",
@@ -46,23 +46,23 @@
     "elements": [
       {
         "text": "home",
-        "action": ""
+        "action": "home"
       },
       {
         "text": "first",
-        "action": ""
+        "action": "first_card"
       },
       {
         "text": "prev",
-        "action": ""
+        "action": "previous_card"
       },
       {
         "text": "next",
-        "action": ""
+        "action": "next_card"
       },
       {
         "text": "last",
-        "action": ""
+        "action": "last_card"
       },
       {
         "text": "find",
@@ -101,11 +101,11 @@
     "elements": [
       {
         "text": "bring closer",
-        "action": ""
+        "action": "closer"
       },
       {
         "text": "send farther",
-        "action": ""
+        "action": "farther"
       },
       {
         "text": "new button",

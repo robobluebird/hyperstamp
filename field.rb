@@ -46,12 +46,24 @@ module Ruby2D
       arrange_text!
     end
 
-    def text_size= size
+    def font= font
+      @font.font = font
+
+      arrange_text!
+
+      font
+    end
+
+    def font_size= size
       @font.size = size
 
       arrange_text!
 
       size
+    end
+
+    def text_size= size
+      self.font_size = size
     end
 
     def to_h
@@ -78,6 +90,12 @@ module Ruby2D
 
     def bordered?
       @bordered
+    end
+
+    def bordered= bordered
+      @bordered = bordered
+
+      bordered? ? @border.add : @border.remove
     end
 
     def remove
@@ -385,10 +403,12 @@ module Ruby2D
 
         range = start_index...end_index
 
+        text = @characters[range].join || ''
+
         @lines << Text.new(
           color: @text_color.to_s,
           z: @z,
-          text: @characters[range].join || '',
+          text: text,
           font: @font.file,
           size: @font.size.to_i,
           x: @content.x,
@@ -397,9 +417,6 @@ module Ruby2D
 
         start_index = next_linebreak ? end_index + 1 : end_index
       end
-
-      # @cursor_position.column = @lines.last ? @lines.last.text.length : 0
-      # @cursor_position.line = number_of_lines - 1
 
       position_cursor
     end
