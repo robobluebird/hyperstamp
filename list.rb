@@ -45,6 +45,8 @@ module Ruby2D
       if @rendered
         @border.add
         @content.add
+
+        layout_items!
       else
         render!
       end

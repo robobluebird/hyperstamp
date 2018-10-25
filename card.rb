@@ -12,7 +12,7 @@ class Card
     @updated_at = opts[:updated_at] || t
 
     @objects = (opts[:objects] || []).map do |obj|
-      klazz = Object.const_get card[:type].split('_').map(&:capitalize).join
+      klazz = Object.const_get obj[:type].split('_').map(&:capitalize).join
       klazz.new obj
     end
 

@@ -89,8 +89,6 @@ def save_stack
   if @path && editable?
     @card.update
 
-    puts @path
-
     File.open(@path, 'w') do |f|
       f.write JSON.pretty_generate @stack.to_h
     end
@@ -112,7 +110,7 @@ def create_stack name, path
 end
 
 def load_stack path
-  rep = JSON.parse File.read(path)
+  rep = JSON.parse File.read(path), symbolize_names: true
 
   unload
 
@@ -571,7 +569,9 @@ def show_file_cabinet_with_text_input opts = {}
     background_height: get(:height),
   }.merge opts
 
-  @fc ||= FileCabinet.new(opts).add
+  @fc = FileCabinet.new(opts)
+
+  @fc.add
 
   @objects += @fc.objectify
 end
@@ -583,7 +583,7 @@ def show_file_cabinet opts = {}
     background_height: get(:height),
   }.merge opts
 
-  @fc ||= FileCabinet.new(opts)
+  @fc = FileCabinet.new(opts)
 
   @fc.add
 

@@ -9,7 +9,7 @@ class Stack
     @name = opts[:name] || 'default'
     @created_at = opts[:created_at] || t
     @updated_at = opts[:updated_at] || t
-    @cards = (opts[:cards] || []).map { |card| Card.new card }
+    @cards = (opts[:cards] || []).map { |card| Card.new card.merge(stack: self) }
     @number = @cards.count
   end
 
