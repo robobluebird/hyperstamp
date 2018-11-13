@@ -66,6 +66,7 @@ module Ruby2D
     end
 
     def z= new_z
+      @z = new_z
       @top.z = new_z
       @right.z = new_z
       @bottom.z = new_z

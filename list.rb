@@ -18,7 +18,7 @@ module Ruby2D
       @rendered_items = []
       @item_height = opts[:item_height] || 20
       @start_index = 0
-      @end_index = [@items.count, ((@height - 2).to_f / @item_height).floor - 1].min
+      @end_index = [@items.count, (@height.to_f / (@item_height + 1)).floor - 1].min
     end
 
     def objectify
@@ -72,7 +72,7 @@ module Ruby2D
     def items= items
       @items = items
       @start_index = 0
-      @end_index = [@items.count, ((@height - 2).to_f / @item_height).floor - 1].min
+      @end_index = [@items.count, (@height.to_f / (@item_height + 1)).floor - 1].min
 
       layout_items!
     end
@@ -94,6 +94,8 @@ module Ruby2D
     end
 
     def scroll dx, dy
+      return if @items.count <= (@height.to_f / (@item_height + 1)).floor - 1
+
       change = if dy > 0
                  [dy, @items.length - 1 - @end_index].min
                elsif dy < 0
@@ -136,7 +138,7 @@ module Ruby2D
           height: @item_height
         )
 
-        y += @item_height
+        y += @item_height + 1
 
         item_element.add
 
@@ -155,7 +157,7 @@ module Ruby2D
         ri.x = @content.x
         ri.y = y
         ri.add
-        y += @item_height
+        y += @item_height + 1
       end
     end
 

@@ -16,7 +16,6 @@ class Card
       klazz.new obj
     end
 
-    @pixels = opts[:pixels] || []
     @drawing = false
   end
 
@@ -24,63 +23,77 @@ class Card
     @editable
   end
 
+  def drawings
+    @objects.select { |o| o.is_a? Drawing }.sort_by { |o| o.z }
+  end
+
   def pixel? x, y
-    @pixels.find do |pixel|
-      pixel.x == calc(x) && pixel.y == calc(y)
+    found_drawing = nil
+    found_pixel = nil
+
+    drawings.each do |drawing|
+      if pixel = drawing.pixel?(calc(x), calc(y))
+        found_drawing = drawing
+        found_pixel = pixel
+
+        break
+      end
     end
+
+    [found_drawing, found_pixel] if found_drawing && found_pixel
   end
 
   def calc i
     ((i.to_f / 10).floor * 10)
   end
 
-  def remove_pixel pixel
-    @pixels.delete pixel
-  end
-
   def pixel x, y
     { x: calc(x), y: calc(y) }
   end
 
-  def start_drawing
+  def start_drawing z
     @drawing = true
+    @objects << Drawing.new(z: z)
   end
 
   def stop_drawing
     @drawing = false
+    drawings.last
   end
 
   def drawing?
     @drawing
   end
 
-  def draw x, y, color, z
+  def draw x, y, color
     return unless drawing?
 
-    if p = pixel?(x, y)
-      if p.color.to_hex != color
-        p.remove
+    drawing, pixel = pixel?(x, y)
 
-        r = remove_pixel p
+    if pixel
+      if pixel.color.to_hex != color
+        drawing.delete pixel
 
-        p = pixel x, y
+        pixel = pixel x, y
 
-        p = p.merge size: 10, color: color, z: z
+        pixel = pixel.merge size: 10, color: color
 
-        @pixels << Square.new(p)
+        drawings.last.push pixel
       end
     else
-      p = pixel x, y
+      pixel = pixel x, y
 
-      p = p.merge size: 10, color: color, z: z
+      pixel = pixel.merge size: 10, color: color
 
-      @pixels << Square.new(p)
+      drawings.last.push pixel
     end
   end
 
-  def render
-    @pixels.each { |pixel| Square.new pixel }
-    @objects.each(&:add)
+  def render listener
+    @objects.each do |o|
+      o.listener = listener
+      o.add
+    end
   end
 
   def update time = nil
@@ -102,8 +115,7 @@ class Card
       editable: @editable,
       created_at: @created_at,
       updated_at: @updated_at,
-      objects: @objects.map(&:to_h),
-      pixels: @pixels.map { |pixel| { x: pixel.x, y: pixel.y, size: pixel.size, color: pixel.to_hex } }
+      objects: @objects.map(&:to_h)
     }
   end
 end

@@ -1,7 +1,7 @@
 module Ruby2D
   class Field
     attr_reader :font, :text_color, :color_scheme, :style, :x, :y, :width, :height, :z
-    attr_accessor :tag
+    attr_accessor :tag, :script, :listener
 
     CursorPosition = Struct.new :line, :column
 
@@ -18,6 +18,7 @@ module Ruby2D
       @style = (opts[:style] || :opaque).to_sym
       @color_scheme = (opts[:color_scheme] || :black_on_white).to_sym
       @insert_index = @characters.count
+      @script = opts[:script] || ''
 
       @z      = opts[:z] || 0
       @x      = opts[:x] || 0
@@ -66,17 +67,52 @@ module Ruby2D
       self.font_size = size
     end
 
+    # def lines!
+    #   number_of_lines = (@content.height.to_f / @font.height).floor
+    #
+    #   if number_of_lines > @lines.count
+    #     next_lines = (0...number_of_lines).to_a - (0...@lines.count).to_a
+    #
+    #     pp next_lines
+    #
+    #     next_lines.each do |line_number|
+    #       Text.new(
+    #         color: @text_color.to_s,
+    #         z: @z,
+    #         text: '',
+    #         font: @font.file,
+    #         size: @font.size.to_i,
+    #         x: @content.x,
+    #         y: @content.y + line_number * @font.height
+    #       )
+    #     end
+    #   elsif number_of_lines < @lines.count
+    #     while number_of_lines > @lines.count
+    #       @lines.last.remove
+    #       @lines.pop
+    #       number_of_lines -= 1
+    #     end
+    #   end
+    #
+    #   puts number_of_lines
+    #
+    #   number_of_lines
+    # end
+
     def to_h
       {
         type: 'field',
+        bordered: bordered?,
         tag: @tag,
         text: @characters.join,
         x: @x,
         y: @y,
+        z: @z,
         width: @width,
         height: @height,
         style: @style,
         color_scheme: @color_scheme,
+        script: @script,
         font: {
           type: @font.type,
           size: @font.size.to_s
@@ -348,7 +384,7 @@ module Ruby2D
         l.remove
       end
 
-      @lines.clear
+      @lines = []
     end
 
     def arrange_text!
@@ -393,29 +429,36 @@ module Ruby2D
           i += 1
         end
 
-        options = [
-          start_index + chars_across
-        ]
+        did_linebreak = false
+        end_of_line_index = start_index + chars_across
 
-        options << next_linebreak if next_linebreak
-
-        end_index = options.min
+        end_index = if next_linebreak && end_of_line_index >= next_linebreak
+                      did_linebreak = true
+                      next_linebreak
+                    else
+                      end_of_line_index
+                    end
 
         range = start_index...end_index
 
-        text = @characters[range].join || ''
+        text = (@characters[range] || []).join || ''
 
-        @lines << Text.new(
-          color: @text_color.to_s,
-          z: @z,
-          text: text,
-          font: @font.file,
-          size: @font.size.to_i,
-          x: @content.x,
-          y: @content.y + line_num * @font.height
-        )
+        if @lines[line_num]
+          @lines[line_num].text = text
+          @lines[line_num].add
+        else
+          @lines[line_num] = Text.new(
+            text,
+            color: @text_color.to_s,
+            z: @z,
+            font: @font.file,
+            size: @font.size.to_i,
+            x: @content.x,
+            y: @content.y + line_num * @font.height
+          )
+        end
 
-        start_index = next_linebreak ? end_index + 1 : end_index
+        start_index = did_linebreak ? end_index + 1 : end_index
       end
 
       position_cursor
@@ -433,7 +476,7 @@ module Ruby2D
 
         line_character_counter += 1
 
-        if character == "\n" || line_character_counter > line_length
+        if character == "\n" || line_character_counter >= line_length
           line += 1
 
           column = 0

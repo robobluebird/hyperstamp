@@ -39,6 +39,11 @@ module Ruby2D
         @object.bordered = {yes: true, no: false}[bordered.to_sym]
       end
 
+      if @script_field
+        new_script = @script_field.text
+        @object.script = new_script
+      end
+
       cancel
     end
 
@@ -47,6 +52,7 @@ module Ruby2D
       list << @label_field if @label_field
       list << @size_checklist if @size_checklist
       list << @bordered_checklist if @bordered_checklist
+      list << @script_field if @script_field
       list
     end
 
@@ -90,6 +96,11 @@ module Ruby2D
         @bordered_label.remove
       end
 
+      if @script_field
+        @script_label.remove
+        @script_field.remove
+      end
+
       @visible = false
 
       self
@@ -125,6 +136,12 @@ module Ruby2D
           @bordered_checklist.add
           @bordered_checklist.checked = @object.bordered? ? 'yes' : 'no'
           @bordered_label.add
+        end
+
+        if @script_field
+          @script_field.text = @object.script
+          @script_field.add
+          @script_label.add
         end
       else
         render!
@@ -195,7 +212,7 @@ module Ruby2D
           z: @z,
           x: @editor.x + 10,
           y: @editor.y + y_offset,
-          width: 100,
+          width: @editor_size - 20,
           height: 20
         ).add
 
@@ -206,7 +223,7 @@ module Ruby2D
           z: @z,
           x: @editor.x + 10,
           y: @editor.y + y_offset,
-          width: 100,
+          width: @editor_size - 20,
           height: 20,
           font: { size: 12 }
         ).add
@@ -222,7 +239,7 @@ module Ruby2D
           z: @z,
           x: @editor.x + 10,
           y: @editor.y + y_offset,
-          width: 100,
+          width: @editor_size - 20,
           height: 20
         ).add
 
@@ -232,12 +249,13 @@ module Ruby2D
           z: @z,
           x: @editor.x + 10,
           y: @editor.y + y_offset,
+          suggested_width: @editor_size,
           items: ['8', '12', '16', '20', '24', '32', '64', '128']
         ).add
 
         @size_checklist.checked = @object.font.size.to_s
 
-        y_offset += 20
+        y_offset += @size_checklist.height
 
         @settings += [@size_label, @size_checklist]
       end
@@ -265,6 +283,32 @@ module Ruby2D
         y_offset += 20
 
         @settings += [@bordered_label, @bordered_checklist]
+      end
+
+      if @object.respond_to? :script
+        @script_label = Label.new(
+          text: 'script',
+          z: @z,
+          x: @editor.x + 10,
+          y: @editor.y + y_offset,
+          height: 20
+        ).add
+
+        y_offset += 20
+
+        @script_field = Field.new(
+          text: @object.script,
+          z: @z,
+          x: @editor.x + 10,
+          y: @editor.y + y_offset,
+          width: @editor_size - 20,
+          height: 48,
+          font: { size: 12 }
+        ).add
+
+        y_offset += 20
+
+        @settings += [@script_label, @script_field]
       end
 
       @cancel_button = Button.new(

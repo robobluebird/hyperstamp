@@ -1,11 +1,13 @@
 module Ruby2D
   class Button
-    attr_accessor :tag, :action
+    attr_accessor :tag, :script, :listener
     attr_reader :font, :label, :color_scheme, :style, :x, :y, :width, :height, :z
 
     def initialize opts = {}
       extend Ruby2D::DSL
 
+      @script = opts[:script] || ''
+      @bordered = true
       @visible = false
       @enabled = true
       @pressed = false
@@ -29,14 +31,30 @@ module Ruby2D
       )
     end
 
+    def bordered?
+      @bordered
+    end
+
+    def bordered= bordered
+      @bordered = bordered
+
+      if bordered?
+        @border.add
+        @shadow.add
+      else
+        @border.remove
+        @shadow.remove
+      end
+    end
+
     def font= font
       @font.font = font
 
       @text.remove
 
       @text = Text.new(
+        @label,
         z: @z,
-        text: @label,
         font: @font.file,
         size: @font.size.to_i,
         color: 'black'
@@ -53,8 +71,8 @@ module Ruby2D
       @text.remove
 
       @text = Text.new(
+        @label,
         z: @z,
-        text: @label,
         font: @font.file,
         size: @font.size.to_i,
         color: 'black'
@@ -91,8 +109,8 @@ module Ruby2D
     def add
       if @rendered
         @highlight.add
-        @border.add
-        @shadow.add
+        @border.add if bordered?
+        @shadow.add if bordered?
         @content.add
         @text.add
       else
@@ -117,15 +135,17 @@ module Ruby2D
     def to_h
       {
         type: 'button',
+        bordered: bordered?,
         label: @label,
         tag: @tag,
         x: @x,
         y: @y,
+        z: @z,
         height: @height,
         width: @width,
         style: @style,
         color_scheme: @color_scheme,
-        action: @action,
+        script: @script,
         font: {
           type: @font.type,
           size: @font.size.to_s
@@ -177,6 +197,7 @@ module Ruby2D
     end
 
     def z= new_z
+      @z = new_z
       @highlight.z = new_z
       @border.z = new_z
       @shadow.z = new_z
@@ -255,17 +276,6 @@ module Ruby2D
     end
 
     def mouse_up x, y, button
-      # if @first_click && Time.now.to_f - @first_click < 0.20
-      #   if @listener && @action
-      #     @listener.instance_eval @action
-      #   end
-      #
-      #   @first_click = nil
-      # elsif @content.contains? e.x, e.y
-      #Time.now.to_f - @first_click < 0.20
-      #   @first_click = Time.now.to_f
-      # end
-      #
       return unless enabled?
 
       if @pressed
@@ -273,8 +283,12 @@ module Ruby2D
 
         revert
 
-        if @listener && @action
-          @listener.instance_eval @action
+        if @listener
+          if @action
+            @listener.send @action.to_sym
+          elsif @script
+            @listener.instance_eval @script
+          end
         end
       end
     end
@@ -310,6 +324,8 @@ module Ruby2D
         color: 'black'
       )
 
+      @border.remove unless bordered?
+
       @shadow = Border.new(
         z: @z,
         x: @x + 2,
@@ -319,6 +335,8 @@ module Ruby2D
         thickness: 2,
         color: 'black'
       )
+
+      @shadow.remove unless bordered?
 
       @content = Rectangle.new(
         z: @z,
@@ -330,8 +348,8 @@ module Ruby2D
       )
 
       @text = Text.new(
+        @label,
         z: @z,
-        text: @label,
         font: @font.file,
         size: @font.size.to_i,
         color: 'black'

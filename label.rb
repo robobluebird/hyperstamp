@@ -183,9 +183,9 @@ module Ruby2D
       )
 
       @text = Text.new(
+        @words,
         z: @z,
         x: @x,
-        text: @words,
         font: @font.file,
         size: @font.size.to_i,
         color: 'black'

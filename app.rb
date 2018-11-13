@@ -2,6 +2,7 @@ require 'ruby2d'
 require 'mini_magick'
 require 'json'
 require 'filemagic'
+require_relative 'drawing'
 require_relative 'checkbox'
 require_relative 'checklist'
 require_relative 'editor'
@@ -24,7 +25,7 @@ require_relative 'card'
 require_relative 'window_ext'
 require_relative 'color_ext'
 
-@z = -1
+@z = 0
 @item = nil
 @objects = []
 @mode = Mode.new
@@ -89,8 +90,10 @@ def save_stack
   if @path && editable?
     @card.update
 
+    rep = JSON.pretty_generate @stack.to_h
+
     File.open(@path, 'w') do |f|
-      f.write JSON.pretty_generate @stack.to_h
+      f.write rep
     end
 
     true
@@ -114,13 +117,17 @@ def load_stack path
 
   unload
 
-  @stack = Stack.new rep
+  @stack = Stack.new rep.merge listener: self
+
+  set title: @stack.name
 
   @card = @stack.cards.first || @stack.new_card
 
   card_number
 
-  @objects += @card.render
+  @objects += @card.render(self)
+
+  @z = zord.reject { |o| o.is_a?(MenuItem) || o.is_a?(MenuElement) }.first.z || 0
 
   @path = path
 end
@@ -134,7 +141,7 @@ def new_card
 
   unload
 
-  @objects += @card.render
+  @objects += @card.render(self)
 end
 
 def next_card
@@ -146,7 +153,7 @@ def next_card
 
   unload
 
-  @objects += @card.render
+  @objects += @card.render(self)
 end
 
 def previous_card
@@ -158,7 +165,7 @@ def previous_card
 
   unload
 
-  @objects += @card.render
+  @objects += @card.render(self)
 end
 
 def first_card
@@ -168,7 +175,7 @@ def first_card
 
   unload
 
-  @objects += @card.render
+  @objects += @card.render(self)
 end
 
 def last_card
@@ -178,7 +185,7 @@ def last_card
 
   unload
 
-  @objects += @card.render
+  @objects += @card.render(self)
 end
 
 def home
@@ -188,7 +195,7 @@ def home
 
   @card = @stack.new_card
 
-  new_field bordered: false, x: 0, y: 20, width: get(:width), height: get(:height) - 20, text: 'welcome to mini hyper card', font: { size: 64 }
+  # new_field bordered: false, x: 0, y: 20, width: get(:width), height: get(:height) - 20, text: 'welcome to mini hyper card', font: { size: 64 }
 
   @stack.editable = false
 
@@ -226,7 +233,9 @@ def farther
 
   return if n.nil?
 
-  z1, z2 = item.z, n.z
+  z1 = item.z
+  z2 = n.z
+
   item.z = z2
   n.z = z1
 
@@ -234,16 +243,7 @@ def farther
 end
 
 def z
-  if @mode.draw?
-    if @already_incremented_z_for_current_drawing
-      @z
-    else
-      @already_incremented_z_for_current_drawing = true
-      @z += 1
-    end
-  else
-    @z += 1
-  end
+  @z += 1
 end
 
 def cool_thing thing
@@ -307,7 +307,14 @@ end
 def new_button
   return unless editable?
 
-  @objects.push @card.add Button.new(z: z, x: 0, y: 20, width: 100, height: 50, label: 'new button').add
+  @objects.push @card.add Button.new(
+    z: z,
+    x: 0,
+    y: 20,
+    width: 100,
+    height: 50,
+    label: 'new button'
+  ).add
 end
 
 def new_field opts = {}
@@ -331,17 +338,17 @@ def load_graphic path
 
   m = MiniMagick::Image.open path
 
+  stored_path = File.expand_path(File.join('images', path.split('/').last))
+
   m.colorspace 'gray'
   m.posterize 5
   m.resize '256x256'
-  m.scale '50%'
-  m.scale '200%'
-
-  stored_path = File.expand_path(File.join('images', path.split('/').last))
+  # m.scale '50%'
+  # m.scale '200%'
 
   m.write stored_path
 
-  @objects.push @card.add Graphic.new(path: stored_path, z: z).add
+  @objects.push @card.add Graphic.new(path: stored_path, z: z, x: 0, y: 20).add
 end
 
 def menu? item
@@ -357,8 +364,8 @@ on :mouse_down do |e|
     @menu_mousing = true
     @item.mouse_down e.x, e.y, e.button
   elsif @mode.draw?
-    @card.start_drawing
-    @card.draw e.x, e.y, color, z
+    @card.start_drawing z
+    @card.draw e.x, e.y, color
   else
     next unless @item
 
@@ -367,6 +374,8 @@ on :mouse_down do |e|
 
       nil
     else
+      next if @item.respond_to? :dont_edit
+
       if resizing? @item, e
         :resize
       else
@@ -404,9 +413,12 @@ on :mouse_up do |e|
   @highlighted = nil
 
   if @mode.draw?
-    @card.stop_drawing
+    @objects << @card.stop_drawing
+
     @already_incremented_z_for_current_drawing = false
+
     save_stack
+
     next
   end
 
@@ -468,7 +480,7 @@ on :mouse_move do |e|
       end
     end
   elsif @mode.draw?
-    @card.draw e.x, e.y, color, z
+    @card.draw e.x, e.y, color
   elsif @item && @mtype
     e.delta_x = 0 if (@item.x + e.delta_x < 0 && @mtype == :translate) || @item.x + @item.width + e.delta_x > get(:width) || @item.x + @item.width + e.delta_x < 0
     e.delta_y = 0 if (@item.y + e.delta_y < 20 && @mtype == :translate) || @item.y + @item.height + e.delta_y > get(:height) || @item.y + @item.height + e.delta_y < 0
@@ -514,7 +526,7 @@ def draw_mode
 end
 
 def editor item
-  @er ||= Editor.new(
+  @er = Editor.new(
     background_height: get(:height),
     background_width: get(:width),
     listener: self
@@ -530,7 +542,10 @@ def editor item
 end
 
 def remove_editor
+  @objects.reject! { |o| @er.objectify.include? o }
+
   @er.remove
+  @er = nil
 
   @mode.edit
   @edited.highlight
@@ -594,6 +609,13 @@ def remove_file_cabinet
   @fc.remove
 
   @objects.count - @objects.reject! { |o| @fc.objectify.include? o }.count
+end
+
+def clear_drawings
+  if @card
+    @card.clear_drawings
+    save_stack
+  end
 end
 
 on :key_down do |e|

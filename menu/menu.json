@@ -38,6 +38,10 @@
       {
         "text": "paste card",
         "action": ""
+      },
+      {
+        "text": "clear drawings",
+        "action": "clear_drawings"
       }
     ]
   },

@@ -12,6 +12,7 @@ module Ruby2D
       @y = opts[:y]
       @width = opts[:width] || 0
       @height = opts[:height] || 0
+      @suggested_width = opts[:suggested_width]
       @items = opts[:items]
     end
 
@@ -87,14 +88,21 @@ module Ruby2D
 
     def items!
       x_offset = 0
+      y_offset = 0
+
       @rendered_items = []
 
       @items.each do |item|
+        if @suggested_width && x_offset + 50 > @suggested_width
+          x_offset = 0
+          y_offset += @height + 4
+        end
+
         c = Checkbox.new(
           tag: item,
           z: @z,
           x: @x + x_offset,
-          y: @y
+          y: @y + y_offset
         ).add
 
         l = Label.new(
@@ -102,7 +110,7 @@ module Ruby2D
           text: item,
           z: @z,
           x: c.x + c.width + 5,
-          y: @y
+          y: @y + y_offset
         ).add
 
         @rendered_items += [c, l]
@@ -111,7 +119,7 @@ module Ruby2D
 
         x_offset += w
 
-        resize! w, l.height + (@border.thickness * 2)
+        resize! w, y_offset + l.height + (@border.thickness * 2)
       end
     end
 

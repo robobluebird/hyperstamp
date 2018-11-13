@@ -11,6 +11,7 @@ module Ruby2D
         type: :picker,
         x: @x,
         y: @y,
+        z: @z,
         width: @width,
         height: @height
       }

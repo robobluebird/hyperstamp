@@ -27,5 +27,13 @@ module Ruby2D
     def draw?
       @mode == :draw
     end
+
+    def fill
+      @mode = :fill
+    end
+
+    def fill?
+      @mode == :fill
+    end
   end
 end

@@ -32,10 +32,10 @@ module Ruby2D
       @words = opts[:text]
 
       @text = Text.new(
+        opts[:text],
         x: @x + 1,
         y: @y + 1,
         height: @height,
-        text: opts[:text],
         color: 'black',
         font: 'fonts/lux.ttf',
         size: 12,

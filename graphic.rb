@@ -11,6 +11,7 @@
 module Ruby2D
   class Graphic
     attr_reader :x, :y, :width, :height, :z, :path
+    attr_accessor :script, :listener
 
     def initialize opts = {}
       @visible = false
@@ -21,6 +22,7 @@ module Ruby2D
       @width = opts[:width] || 0
       @height = opts[:height] || 0
       @path = opts[:path]
+      @script = opts[:script] || ''
     end
 
     def to_h
@@ -29,8 +31,10 @@ module Ruby2D
         path: @path,
         x: @x,
         y: @y,
+        z: @z,
         width: @width,
-        height: @height
+        height: @height,
+        script: @script
       }
     end
 
@@ -68,6 +72,7 @@ module Ruby2D
     end
 
     def z= new_z
+      @z = new_z
       @highlight.z = new_z
       @image.z = new_z
     end
@@ -122,7 +127,7 @@ module Ruby2D
 
         if landscape?
           @width = @height / @r
-        elsif portait?
+        elsif portrait?
           @width = @height * @r
         else
           @width = @height
@@ -142,6 +147,7 @@ module Ruby2D
     end
 
     def mouse_up x, y, button
+      @listener.instance_eval @script if @listener && @script
     end
 
     def mouse_down x, y, button
@@ -162,7 +168,7 @@ module Ruby2D
       @highlight.hide
 
       @image = Image.new(
-        path: @path,
+        @path,
         x: @x,
         y: @y,
         z: @z
