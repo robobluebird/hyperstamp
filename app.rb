@@ -2,6 +2,8 @@ require 'ruby2d'
 require 'mini_magick'
 require 'json'
 require 'filemagic'
+require 'securerandom'
+require 'http'
 require_relative 'drawing'
 require_relative 'checkbox'
 require_relative 'checklist'
@@ -25,6 +27,17 @@ require_relative 'card'
 require_relative 'window_ext'
 require_relative 'color_ext'
 
+require_relative 'stacks_and_cards'
+require_relative 'modals'
+require_relative 'modes'
+
+include StacksAndCards
+include Modals
+include Modes
+
+@url = 'http://localhost:5000'
+@menu_mousing = false
+@normal_rules = true
 @z = 0
 @item = nil
 @objects = []
@@ -41,10 +54,6 @@ require_relative 'color_ext'
 
 set title: "..."
 set background: 'white'
-
-def editable?
-  @stack.editable? && @card.editable?
-end
 
 def card_number
   if @card_number
@@ -78,116 +87,6 @@ def create_menu
   @objects += @menu.objectify
 end
 
-def new_stack
-  show_file_cabinet_with_text_input extension: 'stack', action: 'create_stack'
-end
-
-def open_stack
-  show_file_cabinet extension: 'stack', action: 'load_stack'
-end
-
-def save_stack
-  if @path && editable?
-    @card.update
-
-    rep = JSON.pretty_generate @stack.to_h
-
-    File.open(@path, 'w') do |f|
-      f.write rep
-    end
-
-    true
-  else
-    false
-  end
-end
-
-def create_stack name, path
-  new_stack = Stack.new name: name
-
-  new_stack.new_card
-
-  File.open(path, 'w') { |f| f.write JSON.pretty_generate new_stack.to_h }
-
-  load_stack path
-end
-
-def load_stack path
-  rep = JSON.parse File.read(path), symbolize_names: true
-
-  unload
-
-  @stack = Stack.new rep.merge listener: self
-
-  set title: @stack.name
-
-  @card = @stack.cards.first || @stack.new_card
-
-  card_number
-
-  @objects += @card.render(self)
-
-  @z = zord.reject { |o| o.is_a?(MenuItem) || o.is_a?(MenuElement) }.first.z || 0
-
-  @path = path
-end
-
-def new_card
-  return unless @stack.editable?
-
-  @card = @stack.new_card
-
-  card_number
-
-  unload
-
-  @objects += @card.render(self)
-end
-
-def next_card
-  return unless @card.number < @stack.cards.count
-
-  @card = @stack.card @card.number + 1
-
-  card_number
-
-  unload
-
-  @objects += @card.render(self)
-end
-
-def previous_card
-  return unless @card.number > 1
-
-  @card = @stack.card @card.number - 1
-
-  card_number
-
-  unload
-
-  @objects += @card.render(self)
-end
-
-def first_card
-  @card = @stack.cards.first
-
-  card_number
-
-  unload
-
-  @objects += @card.render(self)
-end
-
-def last_card
-  @card = @stack.card @stack.cards.count
-
-  card_number
-
-  unload
-
-  @objects += @card.render(self)
-end
-
 def home
   unload
 
@@ -195,7 +94,8 @@ def home
 
   @card = @stack.new_card
 
-  # new_field bordered: false, x: 0, y: 20, width: get(:width), height: get(:height) - 20, text: 'welcome to mini hyper card', font: { size: 64 }
+  new_field bordered: false, x: 0, y: 20, width: get(:width), height: 100, text: 'hyperstamp!', font: { size: 64 }
+  new_field bordered: false, x: 0, y: 100, width: get(:width), height: 100, text: "get started with\nfile -> new stack", font: { size: 32 }
 
   @stack.editable = false
 
@@ -313,14 +213,15 @@ def new_button
     y: 20,
     width: 100,
     height: 50,
-    label: 'new button'
+    label: 'new button',
+    listener: self,
   ).add
 end
 
 def new_field opts = {}
   return unless editable?
 
-  opts = { z: z, x: 0, y: 20, width: 100, height: 100, text: '' }.merge opts
+  opts = { z: z, x: 0, y: 20, width: 100, height: 100, text: '', listener: self }.merge opts
 
   @objects.push @card.add Field.new(opts).add
 end
@@ -343,19 +244,14 @@ def load_graphic path
   m.colorspace 'gray'
   m.posterize 5
   m.resize '256x256'
-  # m.scale '50%'
-  # m.scale '200%'
-
   m.write stored_path
 
-  @objects.push @card.add Graphic.new(path: stored_path, z: z, x: 0, y: 20).add
+  @objects.push @card.add Graphic.new(path: stored_path, z: z, x: 0, y: 20, listener: self).add
 end
 
 def menu? item
   item.is_a?(MenuItem) || item.is_a?(MenuElement)
 end
-
-@menu_mousing = false
 
 on :mouse_down do |e|
   @item = zord.find { |o| o.visible? && o.contains?(e.x, e.y) }
@@ -387,7 +283,9 @@ end
 
 on :mouse_up do |e|
   if @menu_mousing
-    menu_element = zord.find { |o| o.contains?(e.x, e.y) && o.is_a?(MenuElement) && o.visible? }
+    menu_element = zord.find do |o|
+      o.contains?(e.x, e.y) && o.is_a?(MenuElement) && o.visible?
+    end
 
     if menu_element
       if @item.selectable?
@@ -429,7 +327,7 @@ on :mouse_up do |e|
     @mtype = nil
   end
 
-  if @mode.edit? && @item.respond_to?(:highlight)
+  if @mode.edit? && @item.respond_to?(:highlight) && @normal_rules
     if @first_edit_click && Time.now.to_f - @first_edit_click < 0.20
       if @item.configurable?
         @edited = @item
@@ -446,6 +344,9 @@ on :mouse_up do |e|
     if @item.respond_to? :focus
       @focused.defocus if @focus
       @item.focus
+
+      # set font/size/brush/whatever
+
       @focused = @item
     elsif @item.respond_to? :mouse_up
       @item.mouse_up e.x, e.y, e.button
@@ -482,8 +383,11 @@ on :mouse_move do |e|
   elsif @mode.draw?
     @card.draw e.x, e.y, color
   elsif @item && @mtype
-    e.delta_x = 0 if (@item.x + e.delta_x < 0 && @mtype == :translate) || @item.x + @item.width + e.delta_x > get(:width) || @item.x + @item.width + e.delta_x < 0
-    e.delta_y = 0 if (@item.y + e.delta_y < 20 && @mtype == :translate) || @item.y + @item.height + e.delta_y > get(:height) || @item.y + @item.height + e.delta_y < 0
+    if @item.is_a? Graphic
+    else
+      e.delta_x = 0 if (@item.x + e.delta_x < 0 && @mtype == :translate) || @item.x + @item.width + e.delta_x > get(:width) || @item.x + @item.width + e.delta_x < 0
+      e.delta_y = 0 if (@item.y + e.delta_y < 20 && @mtype == :translate) || @item.y + @item.height + e.delta_y > get(:height) || @item.y + @item.height + e.delta_y < 0
+    end
 
     @item.send @mtype, e.delta_x, e.delta_y
   else
@@ -497,125 +401,9 @@ on :mouse_move do |e|
   end
 end
 
-def edit_mode
-  return unless editable?
-
-  @mode.edit
-end
-
-def interact_mode
-  @mode.interact
-
-  @menu.select 'tools', 'interact'
-
-  @highlighted.unhighlight if @highlighted
-
-  @highlighted = nil
-end
-
-def draw_mode
-  return unless editable?
-
-  @mode.draw
-
-  @objects.each { |o| o.hover_off nil, nil }
-
-  @highlighted.unhighlight if @highlighted
-
-  @highlighted = nil
-end
-
-def editor item
-  @er = Editor.new(
-    background_height: get(:height),
-    background_width: get(:width),
-    listener: self
-  )
-
-  @er.object = @item
-
-  @er.add
-
-  @objects += @er.objectify
-
-  @mode.interact
-end
-
-def remove_editor
-  @objects.reject! { |o| @er.objectify.include? o }
-
-  @er.remove
-  @er = nil
-
-  @mode.edit
-  @edited.highlight
-  @highlighted = @edited
-  @edited = nil
-
+def quit
   save_stack
-end
-
-def sketch_pad
-  @sp ||= SketchPad.new(
-    background_height: get(:height),
-    background_width: get(:width),
-    listener: self,
-    action: ''
-  ).add
-
-  @sp.add
-
-  @objects += @sp.objectify
-end
-
-def remove_sketch_pad
-  interact_mode
-
-  @sp.remove
-
-  @objects.count - @objects.reject! { |o| @sp.objectify.include? o }.count
-end
-
-def show_file_cabinet_with_text_input opts = {}
-  opts = {
-    save: true,
-    listener: self,
-    background_width: get(:width),
-    background_height: get(:height),
-  }.merge opts
-
-  @fc = FileCabinet.new(opts)
-
-  @fc.add
-
-  @objects += @fc.objectify
-end
-
-def show_file_cabinet opts = {}
-  opts = {
-    listener: self,
-    background_width: get(:width),
-    background_height: get(:height),
-  }.merge opts
-
-  @fc = FileCabinet.new(opts)
-
-  @fc.add
-
-  @objects += @fc.objectify
-end
-
-def remove_file_cabinet
-  @fc.remove
-
-  @objects.count - @objects.reject! { |o| @fc.objectify.include? o }.count
-end
-
-def clear_drawings
-  if @card
-    @card.clear_drawings
-    save_stack
-  end
+  exit
 end
 
 on :key_down do |e|
@@ -652,6 +440,11 @@ on :key_up do |e|
   elsif key.include? 'command'
     @command = false
     next
+  elsif @highlighted && key == 'backspace'
+    @highlighted.remove
+    @objects.delete @card.remove @highlighted
+    @highlighted.unhighlight if @highlighted
+    @highlighted = nil
   else
     @held_key = nil
     @key_counter = 0

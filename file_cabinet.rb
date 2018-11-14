@@ -177,7 +177,6 @@ module Ruby2D
       x = @list.x + (@list.width - 100)
       y = @list.y + @list.height + 5
 
-
       if save?
         @name_label = Label.new(
           text: "name (.#{@extension})",

@@ -39,6 +39,11 @@ module Ruby2D
         @object.bordered = {yes: true, no: false}[bordered.to_sym]
       end
 
+      if @tag_field
+        new_tag = @tag_field.text
+        @object.tag = new_tag
+      end
+
       if @script_field
         new_script = @script_field.text
         @object.script = new_script
@@ -52,6 +57,7 @@ module Ruby2D
       list << @label_field if @label_field
       list << @size_checklist if @size_checklist
       list << @bordered_checklist if @bordered_checklist
+      list << @tag_field if @tag_field
       list << @script_field if @script_field
       list
     end
@@ -76,11 +82,6 @@ module Ruby2D
       @cancel_button.remove
       @save_button.remove
 
-      if @tag_field
-        @tag_field.remove
-        @tag_label.remove
-      end
-
       if @label_field
         @label_field.remove
         @label_label.remove
@@ -94,6 +95,11 @@ module Ruby2D
       if @bordered_checklist
         @bordered_checklist.remove
         @bordered_label.remove
+      end
+
+      if @tag_field
+        @tag_field.remove
+        @tag_label.remove
       end
 
       if @script_field
@@ -114,12 +120,6 @@ module Ruby2D
         @cancel_button.add
         @save_button.add
 
-        if @tag_field
-          @tag_field.text = @object.tag
-          @tag_field.add
-          @tag_label.add
-        end
-
         if @label_field
           @label_field.text = @object.label
           @label_field.add
@@ -138,6 +138,12 @@ module Ruby2D
           @bordered_label.add
         end
 
+        if @tag_field
+          @tag_field.text = @object.tag
+          @tag_field.add
+          @tag_label.add
+        end
+
         if @script_field
           @script_field.text = @object.script
           @script_field.add
@@ -153,19 +159,15 @@ module Ruby2D
     end
 
     def hover_on x, y
-
     end
 
     def hover_off x, y
-
     end
 
     def mouse_down x, y, button
-
     end
 
     def mouse_up x, y, button
-
     end
 
     private
@@ -283,6 +285,32 @@ module Ruby2D
         y_offset += 20
 
         @settings += [@bordered_label, @bordered_checklist]
+      end
+
+      if @object.respond_to? :tag
+        @tag_label = Label.new(
+          text: 'tag',
+          z: @z,
+          x: @editor.x + 10,
+          y: @editor.y + y_offset,
+          height: 20
+        ).add
+
+        y_offset += 20
+
+        @tag_field = Field.new(
+          text: @object.tag || '',
+          z: @z,
+          x: @editor.x + 10,
+          y: @editor.y + y_offset,
+          width: @editor_size - 20,
+          height: 20,
+          font: { size: 12 }
+        ).add
+
+        y_offset += 20
+
+        @settings += [@tag_label, @tag_field]
       end
 
       if @object.respond_to? :script

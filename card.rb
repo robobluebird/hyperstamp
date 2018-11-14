@@ -109,6 +109,13 @@ class Card
     object
   end
 
+  def remove object
+    @objects.delete object
+    @updated_at = Time.now.to_i
+    @stack.update @updated_at
+    object
+  end
+
   def to_h
     {
       number: @number,

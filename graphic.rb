@@ -11,7 +11,7 @@
 module Ruby2D
   class Graphic
     attr_reader :x, :y, :width, :height, :z, :path
-    attr_accessor :script, :listener
+    attr_accessor :script, :listener, :tag
 
     def initialize opts = {}
       @visible = false
@@ -112,27 +112,33 @@ module Ruby2D
     end
 
     def resize dx, dy
+      new_height = nil
+      new_width = nil
+
       if !dx.to_i.zero?
-        @width = @width + dx
+        new_width = @width + dx
 
-        if landscape?
-          @height = @width * @r
+        new_height = if landscape?
+          @width * @r
         elsif portrait?
-          @height = @width / @r
+          @width / @r
         else
-          @height = @width
-        end
+          @width
+                     end
       else
-        @height = @height + dy
+        new_height = @height + dy
 
-        if landscape?
-          @width = @height / @r
+        new_width = if landscape?
+          @height / @r
         elsif portrait?
-          @width = @height * @r
+          @height * @r
         else
-          @width = @height
+          @height
         end
       end
+
+      @height = new_height
+      @width = new_width
 
       @image.width = @width
       @image.height = @height

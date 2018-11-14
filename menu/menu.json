@@ -11,16 +11,8 @@
         "action": "open_stack"
       },
       {
-        "text": "save stack",
-        "action": ""
-      },
-      {
-        "text": "save stack as",
-        "action": ""
-      },
-      {
         "text": "quit",
-        "action": ""
+        "action": "quit"
       }
     ]
   },

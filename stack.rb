@@ -1,10 +1,11 @@
 class Stack
-  attr_reader :name, :created_at, :updated_at, :cards
+  attr_reader :name, :created_at, :updated_at, :cards, :id
   attr_accessor :editable
 
   def initialize opts = {}
     t = Time.now.to_i
 
+    @id = opts[:id] || SecureRandom.uuid
     @editable = opts[:editable].nil? ? true : opts[:editable]
     @name = opts[:name] || 'default'
     @created_at = opts[:created_at] || t
@@ -52,6 +53,7 @@ class Stack
 
   def to_h
     {
+      id: @id,
       name: @name,
       editable: @editable,
       created_at: @created_at,

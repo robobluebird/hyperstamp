@@ -1,6 +1,6 @@
 module Ruby2D
   class Drawing
-    attr_accessor :pixels, :listener
+    attr_accessor :pixels, :listener, :tag
     attr_reader :z
 
     def initialize opts = {}
