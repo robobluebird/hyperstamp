@@ -29,22 +29,39 @@ module Modals
     save_stack
   end
 
+  def show_search
+    interact_mode
+
+    @search = Search.new(
+      background_height: get(:height),
+      background_width: get(:width),
+      listener: self,
+      action: 'search'
+    ).add
+
+    @objects += @search.objectify
+  end
+
+  def remove_search
+    @search.remove
+
+    @objects.count - @objects.reject! { |o| @search.objectify.include? o }.count
+  end
+
   def sketch_pad
-    @sp ||= SketchPad.new(
+    interact_mode
+
+    @sp = SketchPad.new(
       background_height: get(:height),
       background_width: get(:width),
       listener: self,
       action: ''
     ).add
 
-    @sp.add
-
     @objects += @sp.objectify
   end
 
   def remove_sketch_pad
-    interact_mode
-
     @sp.remove
 
     @objects.count - @objects.reject! { |o| @sp.objectify.include? o }.count
@@ -62,9 +79,7 @@ module Modals
       background_height: get(:height),
     }.merge opts
 
-    @fc = FileCabinet.new(opts)
-
-    @fc.add
+    @fc = FileCabinet.new(opts).add
 
     @objects += @fc.objectify
   end
@@ -80,9 +95,7 @@ module Modals
       background_height: get(:height),
     }.merge opts
 
-    @fc = FileCabinet.new(opts)
-
-    @fc.add
+    @fc = FileCabinet.new(opts).add
 
     @objects += @fc.objectify
   end

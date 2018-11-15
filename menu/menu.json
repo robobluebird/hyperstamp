@@ -25,15 +25,15 @@
       },
       {
         "text": "copy card",
-        "action": ""
+        "action": "copy_card"
       },
       {
         "text": "paste card",
-        "action": ""
+        "action": "paste_card"
       },
       {
-        "text": "clear drawings",
-        "action": "clear_drawings"
+        "text": "delete card",
+        "action": "delete_card"
       }
     ]
   },
@@ -62,7 +62,7 @@
       },
       {
         "text": "find",
-        "action": ""
+        "action": "show_search"
       },
       {
         "text": "message",

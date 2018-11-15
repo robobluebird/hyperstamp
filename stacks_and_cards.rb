@@ -86,15 +86,28 @@ module StacksAndCards
   def new_card
     return unless @stack.editable?
 
-    @card = @stack.new_card
+    @stack.new_card
 
-    card_number
+    load_card 1
+  end
 
-    unload
+  def copy_card
+  end
 
-    @z = 0
+  def paste_card
+  end
 
-    @objects += @card.render(self)
+  def delete_card
+    if @stack && @card
+      @stack.delete_card @card
+
+      if @stack.cards.count > 0
+        load_card @card.number - 1
+      else
+        @stack.new_card
+        load_card 1
+      end
+    end
   end
 
   def next_card

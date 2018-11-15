@@ -10,6 +10,7 @@ require_relative 'checklist'
 require_relative 'editor'
 require_relative 'sketch_pad'
 require_relative 'file_cabinet'
+require_relative 'search'
 require_relative 'list'
 require_relative 'label'
 require_relative 'keys'
@@ -54,6 +55,24 @@ include Modes
 
 set title: "..."
 set background: 'white'
+
+def search text
+  @stack.cards.inject([]) do |memo, card|
+    objects = card.objects.select do |o|
+      o.respond_to?(:text) && o.text.downcase.include?(text)
+    end
+
+    if objects.any?
+      memo << [card, objects]
+    else
+      memo
+    end
+  end
+end
+
+def object_with_tag tag
+  @objects.find { |o| o.respond_to?(:tag) && o.tag == tag }
+end
 
 def card_number
   if @card_number
@@ -348,7 +367,9 @@ on :mouse_up do |e|
       # set font/size/brush/whatever
 
       @focused = @item
-    elsif @item.respond_to? :mouse_up
+    end
+
+    if @item.respond_to? :mouse_up
       @item.mouse_up e.x, e.y, e.button
     end
   end

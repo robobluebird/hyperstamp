@@ -43,7 +43,7 @@ class Stack
   end
 
   def delete_card card
-    @card.delete card
+    @cards.delete card
     reindex!
   end
 
@@ -66,7 +66,6 @@ class Stack
 
   def reindex!
     @number = 0
-
     @cards.each { |card| card.number = number }
   end
 end

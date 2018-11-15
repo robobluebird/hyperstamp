@@ -41,7 +41,7 @@ module Ruby2D
     end
 
     def text= new_text
-      @characters = new_text.split ''
+      @characters = new_text.to_s.split ''
       @insert_index = @characters.count
 
       arrange_text!
@@ -320,9 +320,16 @@ module Ruby2D
     end
 
     def mouse_up x, y, button
+      line = ((y - @content.y) / @font.height).floor
+      column = ((x - @content.x) / @font.width).floor
+
+      position_cursor line, column
     end
 
     def mouse_down x, y, button
+    end
+
+    def scroll
     end
 
     private
@@ -464,7 +471,7 @@ module Ruby2D
       position_cursor
     end
 
-    def position_cursor
+    def position_cursor requested_line = nil, requested_column = nil
       line = 0
       column = 0
       line_character_counter = 0
@@ -472,7 +479,15 @@ module Ruby2D
       line_length = (@content.width.to_f / @font.width).floor
 
       @characters.each_with_index do |character, index|
-        break if character_counter == @insert_index
+        if line == requested_line && column == requested_column
+          break
+        end
+
+        if character_counter == @insert_index &&
+            requested_line.nil? &&
+            requested_column.nil?
+          break
+        end
 
         line_character_counter += 1
 
@@ -487,6 +502,10 @@ module Ruby2D
         end
 
         character_counter += 1
+      end
+
+      if requested_line && requested_column
+        @insert_index = character_counter
       end
 
       @cursor_position.line = line
