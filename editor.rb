@@ -170,6 +170,10 @@ module Ruby2D
     def mouse_up x, y, button
     end
 
+    def scriptable?
+      @object && @object.respond_to?(:script)
+    end
+
     private
 
     def render!
@@ -184,15 +188,25 @@ module Ruby2D
 
       @background.opacity = 0.5
 
+      border_offset = @editor_size / 2 + 2
+      border_offset = @editor_size + 1 if scriptable?
+
+      border_x = (@background_width / 2) - border_offset
+
+      border_width = scriptable? ? (@editor_size * 2) + 2 : @editor_size + 2
+
       @border = Border.new(
         z: @z,
-        x: (@background_width / 2) - ((@editor_size + 2) / 2),
+        x: border_x,
         y: (@background_height / 2) - ((@editor_size + 2) / 2),
-        width: @editor_size + 2,
+        width: border_width,
         height: @editor_size + 2,
       )
 
-      cx = (@background_width / 2) - (@editor_size / 2)
+      editor_offset = @editor_size / 2
+      editor_offset = editor_offset * 2 if scriptable?
+
+      cx = (@background_width / 2) - editor_offset
       cy = (@background_height / 2) - (@editor_size / 2)
 
       @pixel_x_offset = cx % 8
@@ -202,7 +216,7 @@ module Ruby2D
         z: @z,
         x: cx,
         y: cy,
-        width: @editor_size,
+        width: scriptable? ? @editor_size * 2 : @editor_size,
         height: @editor_size
       )
 
@@ -317,8 +331,8 @@ module Ruby2D
         @script_label = Label.new(
           text: 'script',
           z: @z,
-          x: @editor.x + 10,
-          y: @editor.y + y_offset,
+          x: @editor.x + @editor_size + 10,
+          y: @editor.y,
           height: 20
         ).add
 
@@ -327,10 +341,10 @@ module Ruby2D
         @script_field = Field.new(
           text: @object.script,
           z: @z,
-          x: @editor.x + 10,
-          y: @editor.y + y_offset,
+          x: @editor.x + @editor_size + 10,
+          y: @editor.y + 20,
           width: @editor_size - 20,
-          height: 48,
+          height: @editor_size - 40,
           font: { size: 12 }
         ).add
 

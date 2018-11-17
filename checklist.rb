@@ -89,6 +89,7 @@ module Ruby2D
     def items!
       x_offset = 0
       y_offset = 0
+      largest_width = 0
 
       @rendered_items = []
 
@@ -110,7 +111,7 @@ module Ruby2D
           text: item,
           z: @z,
           x: c.x + c.width + 5,
-          y: @y + y_offset
+          y: @y + y_offset + 1
         ).add
 
         @rendered_items += [c, l]
@@ -119,18 +120,20 @@ module Ruby2D
 
         x_offset += w
 
-        resize! w, y_offset + l.height + (@border.thickness * 2)
+        largest_width = x_offset if x_offset > largest_width
+
+        resize! largest_width, y_offset + l.height + (@border.thickness * 2)
       end
     end
 
     def resize! w, h
-      @width += w + (@border.thickness * 2)
-      @border.width = @width
-      @content.width = w
-
+      @width = w + (@border.thickness * 2)
       @height = h + (@border.thickness * 2)
-      @border.height = @height
+
+      @content.width = w
       @content.height = h
+
+      @border.resize_to @width, @height
     end
 
     def render!
@@ -140,8 +143,10 @@ module Ruby2D
         y: @y,
         width: @width,
         height: @height,
-        color: 'white'
+        color: 'black'
       )
+
+      @border.hide
 
       @content = Rectangle.new(
         z: @z,

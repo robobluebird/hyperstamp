@@ -19,6 +19,8 @@ module Ruby2D
       @color_scheme = (opts[:color_scheme] || :black_on_white).to_sym
       @insert_index = @characters.count
       @script = opts[:script] || ''
+      @start_index = 0
+      @end_index = nil
 
       @z      = opts[:z] || 0
       @x      = opts[:x] || 0
@@ -66,38 +68,6 @@ module Ruby2D
     def text_size= size
       self.font_size = size
     end
-
-    # def lines!
-    #   number_of_lines = (@content.height.to_f / @font.height).floor
-    #
-    #   if number_of_lines > @lines.count
-    #     next_lines = (0...number_of_lines).to_a - (0...@lines.count).to_a
-    #
-    #     pp next_lines
-    #
-    #     next_lines.each do |line_number|
-    #       Text.new(
-    #         color: @text_color.to_s,
-    #         z: @z,
-    #         text: '',
-    #         font: @font.file,
-    #         size: @font.size.to_i,
-    #         x: @content.x,
-    #         y: @content.y + line_number * @font.height
-    #       )
-    #     end
-    #   elsif number_of_lines < @lines.count
-    #     while number_of_lines > @lines.count
-    #       @lines.last.remove
-    #       @lines.pop
-    #       number_of_lines -= 1
-    #     end
-    #   end
-    #
-    #   puts number_of_lines
-    #
-    #   number_of_lines
-    # end
 
     def to_h
       {
@@ -194,7 +164,7 @@ module Ruby2D
           # @cursor_position.line += 1
         end
 
-        position_cursor
+        position_cursor!
 
         return
       elsif str.include? 'backspace'
@@ -323,13 +293,28 @@ module Ruby2D
       line = ((y - @content.y) / @font.height).floor
       column = ((x - @content.x) / @font.width).floor
 
-      position_cursor line, column
+      position_cursor! line, column
     end
 
     def mouse_down x, y, button
     end
 
-    def scroll
+    # see the scroll method in list.rb for a bad
+    # explanation of this logic!
+    def scroll dx, dy
+      change = if dy > 0
+                 [dy, @line_info.length - 1 - @end_index].min
+               elsif dy < 0
+                 [dy, 0 - @start_index].max
+               else
+                 0
+               end
+
+      @start_index += change
+      @end_index += change
+
+      render_text!
+      position_cursor!
     end
 
     private
@@ -395,17 +380,13 @@ module Ruby2D
     end
 
     def arrange_text!
-      clear_text!
-
-      return if @content.width < @font.width
-
       chars_across = (@content.width.to_f / @font.width).floor
 
       # for each segment between newline chars,
       # divide the number of chars in the segment by the number
       # of chars we can display in the line
       # if the segment char count doesn't fit then we need potentially multiple
-      # more newlines inbetween the newline chars
+      # more newlines in between the newline chars
       number_of_newlines = @characters.join.split("\n").reduce(0) do |memo, item|
         memo += [(item.length.to_f / chars_across).ceil, 1].max
       end
@@ -419,11 +400,18 @@ module Ruby2D
         i -= 1
       end
 
-      number_of_lines = [number_of_newlines, (@content.height.to_f / @font.height).floor].min
+      available_space = (@content.height.to_f / @font.height).floor
+      @end_index = if number_of_newlines < available_space
+        @start_index = 0
+        number_of_newlines - 1
+      else
+        available_space - 1
+      end
+
+      @line_info = []
 
       start_index = 0
-
-      number_of_lines.times do |line_num|
+      number_of_newlines.times do |line_num|
         next_linebreak = nil
 
         i = start_index
@@ -450,28 +438,41 @@ module Ruby2D
 
         text = (@characters[range] || []).join || ''
 
-        if @lines[line_num]
-          @lines[line_num].text = text
-          @lines[line_num].add
-        else
-          @lines[line_num] = Text.new(
-            text,
+        @line_info << {
+          text: text,
+          options: {
             color: @text_color.to_s,
             z: @z,
             font: @font.file,
             size: @font.size.to_i,
             x: @content.x,
             y: @content.y + line_num * @font.height
-          )
-        end
+          }
+        }
 
         start_index = did_linebreak ? end_index + 1 : end_index
       end
 
-      position_cursor
+      render_text!
+
+      position_cursor!
     end
 
-    def position_cursor requested_line = nil, requested_column = nil
+    def render_text!
+      clear_text!
+
+      return if @content.width < @font.width
+
+      y = 0
+
+      (@start_index..@end_index).each do |i|
+        options = @line_info[i][:options].merge y: @content.y + y
+        @lines.push Text.new @line_info[i][:text], options
+        y += @font.height
+      end
+    end
+
+    def position_cursor! requested_line = nil, requested_column = nil
       line = 0
       column = 0
       line_character_counter = 0

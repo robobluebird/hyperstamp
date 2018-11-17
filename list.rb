@@ -19,6 +19,7 @@ module Ruby2D
       @item_height = opts[:item_height] || 20
       @start_index = 0
       @end_index = [@items.count, (@height.to_f / (@item_height + 1)).floor - 1].min
+      @line_info = []
     end
 
     def objectify
@@ -94,11 +95,29 @@ module Ruby2D
     end
 
     def scroll dx, dy
+
+      # don't bother scrolling if the items don't fill the list window
       return if @items.count <= (@height.to_f / (@item_height + 1)).floor - 1
 
+      # if dy is positive then we are going further down the list
+      # if dy is negative then we are going up the list toward 0
       change = if dy > 0
+
+                 # phew, okay
+                 # what's smaller, the scroll amount
+                 # or the number of items we have left
+                 # after the current end index?
+                 # ex: end_index = 5, item count is 8
+                 #     so last index available in the array is 7 right?
+                 #     so if dy is 1 then it would "win" because 1 < 2
+                 #     but if dy is 3 then we only scroll 2 rather than 3
                  [dy, @items.length - 1 - @end_index].min
                elsif dy < 0
+
+                 # same logic applies for "upward" scrolling
+                 # just in reverse
+                 # should we scroll the dy "scroll amount"
+                 # or only scroll the remainig spaces?
                  [dy, 0 - @start_index].max
                else
                  0
