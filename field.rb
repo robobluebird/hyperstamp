@@ -13,6 +13,8 @@ module Ruby2D
       @shifted = false
       @tag = opts[:tag]
       @lines = []
+      @dashed = opts[:dashed].nil? ? true : opts[:dashed]
+      @dashes = []
       @characters = opts[:text].split('') || []
       @text_color = (opts[:text_color] || :black).to_sym
       @style = (opts[:style] || :opaque).to_sym
@@ -32,6 +34,16 @@ module Ruby2D
         type: opts.dig(:font, :type),
         size: opts.dig(:font, :size)
       )
+    end
+
+    def dashed?
+      @dashed
+    end
+
+    def dashed= dashed
+      @dashed = dashed
+
+      arrange_text!
     end
 
     def configurable?
@@ -73,6 +85,7 @@ module Ruby2D
       {
         type: 'field',
         bordered: bordered?,
+        dashed: dashed?,
         tag: @tag,
         text: @characters.join,
         x: @x,
@@ -106,6 +119,7 @@ module Ruby2D
 
     def remove
       clear_text!
+      clear_dashes!
 
       @highlight.remove
       @border.remove
@@ -379,6 +393,47 @@ module Ruby2D
       @lines = []
     end
 
+    def clear_dashes!
+      @dashes.each do |d|
+        d.remove
+      end
+
+      @dashes = []
+    end
+
+    def dashes!
+      clear_dashes!
+
+      return unless dashed?
+
+      lines_to_draw = ((@content.height.to_f) / @font.height).floor
+
+      h = @font.height
+
+      lines_to_draw.times do |i|
+        dashes = (@content.width.to_f / 20).floor
+
+        w = 0
+
+        while @content.x + w <= @content.x + @content.width do
+          dash_width = [10, (@content.x + @content.width) - (@content.x + w)].min
+          @dashes << Line.new(
+            z: @z,
+            x1: @content.x + w,
+            y1: @content.y + h + 1,
+            x2: @content.x + w + dash_width,
+            y2: @content.y + h + 1,
+            width: 1,
+            color: 'black'
+          )
+
+          w += 20
+        end
+
+        h += @font.height
+      end
+    end
+
     def arrange_text!
       chars_across = (@content.width.to_f / @font.width).floor
 
@@ -453,6 +508,7 @@ module Ruby2D
         start_index = did_linebreak ? end_index + 1 : end_index
       end
 
+      dashes!
       render_text!
 
       position_cursor!

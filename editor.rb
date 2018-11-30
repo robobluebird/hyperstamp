@@ -39,6 +39,11 @@ module Ruby2D
         @object.bordered = {yes: true, no: false}[bordered.to_sym]
       end
 
+      if @dashed_checklist
+        dashed = @dashed_checklist.checked
+        @object.dashed = {yes: true, no: false}[dashed.to_sym]
+      end
+
       if @tag_field
         new_tag = @tag_field.text
         @object.tag = new_tag
@@ -57,6 +62,7 @@ module Ruby2D
       list << @label_field if @label_field
       list << @size_checklist if @size_checklist
       list << @bordered_checklist if @bordered_checklist
+      list << @dashed_checklist if @dashed_checklist
       list << @tag_field if @tag_field
       list << @script_field if @script_field
       list
@@ -95,6 +101,11 @@ module Ruby2D
       if @bordered_checklist
         @bordered_checklist.remove
         @bordered_label.remove
+      end
+
+      if @dashed_checklist
+        @dashed_checklist.remove
+        @dashed_label.remove
       end
 
       if @tag_field
@@ -136,6 +147,12 @@ module Ruby2D
           @bordered_checklist.add
           @bordered_checklist.checked = @object.bordered? ? 'yes' : 'no'
           @bordered_label.add
+        end
+
+        if @dashed_checklist
+          @dashed_checklist.add
+          @dashed_checklist.checked = @object.dashed? ? 'yes' : 'no'
+          @dashed_label.add
         end
 
         if @tag_field
@@ -235,6 +252,7 @@ module Ruby2D
         y_offset += 20
 
         @label_field = Field.new(
+          dashed: false,
           text: @object.label,
           z: @z,
           x: @editor.x + 10,
@@ -301,6 +319,31 @@ module Ruby2D
         @settings += [@bordered_label, @bordered_checklist]
       end
 
+      if @object.respond_to? :dashed=
+        @dashed_label = Label.new(
+          text: 'dashed?',
+          z: @z,
+          x: @editor.x + 10,
+          y: @editor.y + y_offset,
+          height: 20
+        ).add
+
+        y_offset += 20
+
+        @dashed_checklist = Checklist.new(
+          z: @z,
+          x: @editor.x + 10,
+          y: @editor.y + y_offset,
+          items: ['yes', 'no']
+        ).add
+
+        @dashed_checklist.checked = @object.dashed? ? 'yes' : 'no'
+
+        y_offset += 20
+
+        @settings += [@dashed_label, @dashed_checklist]
+      end
+
       if @object.respond_to? :tag
         @tag_label = Label.new(
           text: 'tag',
@@ -313,6 +356,7 @@ module Ruby2D
         y_offset += 20
 
         @tag_field = Field.new(
+          dashed: false,
           text: @object.tag || '',
           z: @z,
           x: @editor.x + 10,
@@ -339,6 +383,7 @@ module Ruby2D
         y_offset += 20
 
         @script_field = Field.new(
+          dashed: false,
           text: @object.script,
           z: @z,
           x: @editor.x + @editor_size + 10,

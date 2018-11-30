@@ -3,18 +3,19 @@
   "name": "default",
   "editable": true,
   "created_at": 1542171267,
-  "updated_at": 1542473140,
+  "updated_at": 1543619917,
   "cards": [
     {
       "number": 1,
       "editable": true,
       "created_at": 1542171267,
-      "updated_at": 1542473140,
+      "updated_at": 1543619580,
       "objects": [
         {
           "type": "field",
           "bordered": false,
-          "tag": null,
+          "dashed": true,
+          "tag": "",
           "text": "there's a way  out of here!\n\njust follow the path okay?!",
           "x": 30,
           "y": 120,
@@ -5338,6 +5339,7 @@
         {
           "type": "field",
           "bordered": false,
+          "dashed": true,
           "tag": "",
           "text": "thoughts",
           "x": 0,
@@ -5356,6 +5358,7 @@
         {
           "type": "field",
           "bordered": false,
+          "dashed": true,
           "tag": "",
           "text": "Once upon a time...\n\nBlah blah blah.\n\nYes!",
           "x": 14,
@@ -8307,7 +8310,7 @@
       "number": 5,
       "editable": true,
       "created_at": 1542302073,
-      "updated_at": 1542387450,
+      "updated_at": 1543619917,
       "objects": [
         {
           "type": "button",
@@ -8330,6 +8333,7 @@
         {
           "type": "field",
           "bordered": true,
+          "dashed": false,
           "tag": "calc",
           "text": "24 / 1.5 + 2",
           "x": 126,
@@ -8348,13 +8352,14 @@
         {
           "type": "field",
           "bordered": true,
+          "dashed": false,
           "tag": "result",
-          "text": "5",
+          "text": "18.0",
           "x": 126,
           "y": 132,
           "z": 3,
-          "width": 336,
-          "height": 34,
+          "width": 337,
+          "height": 37,
           "style": "opaque",
           "color_scheme": "black_on_white",
           "script": "",

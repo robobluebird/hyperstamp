@@ -113,8 +113,8 @@ def home
 
   @card = @stack.new_card
 
-  new_field bordered: false, x: 0, y: 20, width: get(:width), height: 100, text: 'hyperstamp!', font: { size: 64 }
-  new_field bordered: false, x: 0, y: 100, width: get(:width), height: 100, text: "get started with\nfile -> new stack", font: { size: 32 }
+  new_field dashed: false, bordered: false, x: 0, y: 20, width: get(:width), height: 100, text: 'hyperstamp!', font: { size: 64 }
+  new_field dashed: false, bordered: false, x: 0, y: 100, width: get(:width), height: 100, text: "get started with\nfile -> new stack", font: { size: 32 }
 
   @stack.editable = false
 
